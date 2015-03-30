@@ -126,12 +126,11 @@ public class ServiceDescriptorGenerator {
 			service.setName(clazz.getSimpleName());
 
 			Path pathAnnotation = clazz.getAnnotation(Path.class);
-
-			if (pathAnnotation == null) {
-				throw new RuntimeException("No @Path on class " + clazz.getName());
-			}
-
-			service.setPath(pathAnnotation.value());
+      String pathValue = "";
+      if(pathAnnotation != null){
+        pathValue = pathAnnotation.value();
+      }
+			service.setPath(pathValue);
 
 			for (Method method : clazz.getDeclaredMethods()) {
 				if (Modifier.isPublic(method.getModifiers())) {
@@ -255,11 +254,16 @@ public class ServiceDescriptorGenerator {
 		for (RestMethod restMethod : module.getMethods().values()) {
 			FunctionType function = classDef.getMethods().get(restMethod.getName());
 
+      if(function == null){
+        continue;
+      }
 			// Copy ordered list of param types
 			List<AbstractType> types = new ArrayList<AbstractType>();
-			types.addAll(function.getParameters().values());
+      if(function.getParameters() != null && function.getParameters().values() != null) {
+        types.addAll(function.getParameters().values());
+        function.getParameters().clear();
+      }
 
-			function.getParameters().clear();
 
 			int i = 0;
 			for (Param param : restMethod.getParams()) {

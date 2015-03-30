@@ -21,6 +21,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import java2typescript.jackson.module.grammar.Module;
 import java2typescript.jaxrs.ServiceDescriptorGenerator;
 
@@ -39,14 +48,23 @@ import com.google.common.collect.Lists;
  */
 public class MainMojo extends AbstractMojo {
 
-	/**
-	 * Full class name of the REST service
-	 * @required 
-	 * @parameter
-	 *    alias="serviceClass" 
-	 *    expression="${j2ts.serviceClass}"
-	 */
-	private String restServiceClassName;
+//	/**
+//	 * Full class name of the REST service
+//	 * @required
+//	 * @parameter
+//	 *    alias="serviceClass"
+//	 *    expression="${j2ts.serviceClass}"
+//	 */
+//	private String restServiceClassName;
+
+  	/**
+  	 * REST service interface directory
+  	 * @required
+  	 * @parameter
+  	 *    alias="serviceClass"
+  	 *    expression="${j2ts.serviceClass}"
+  	 */
+  private String restServiceBaseDir;
 
 	/**
 	 * Name of output module (ts,js)
@@ -80,29 +98,80 @@ public class MainMojo extends AbstractMojo {
 	 */
 	private File jsOutFolder;
 
+
+  private static final String packageRegex = "^package\\s+([^;]+);$";
+  private static final Pattern packagePattern = Pattern.compile(packageRegex);
+
+  private static final String classRegex = "^public\\s+interface\\s+\\w+\\s+\\{\\s*$";
+  private static final Pattern classPattern = Pattern.compile(classRegex);
+
+  //private static final String re
+
+  public String readClassName(File f) throws Exception {
+    System.out.println("Reading class name for file " + f.getAbsolutePath());
+
+    String fileName = f.getName();
+    final String fileClassName = fileName.substring(0, fileName.length() - 5);
+    final Path path = Paths.get(f.getAbsolutePath());
+    final Predicate<String> matchesClassRegex = (s) -> s.matches(classRegex);
+    final Predicate<String> matchesFileName = (s) -> s.contains(fileClassName);
+    String className = null;
+
+    if(Files.lines(path).anyMatch(matchesClassRegex.and(matchesFileName))){
+      final String packageName = Files.lines(path).filter(s -> s.matches(packageRegex)).findFirst().get();
+      final Matcher packageMatcher = packagePattern.matcher(packageName);
+      if(packageMatcher.matches()){
+        className = packageMatcher.group(1) + "." + fileClassName;
+        System.out.println("Found classname : " + className);
+      }
+    }
+    return className;
+  }
+
+
+  public List<String> listClassNames(File dir) throws Exception{
+    List<String> classNames = new ArrayList<String>();
+    if(dir.isDirectory()){
+      for(File file: dir.listFiles()){
+        if(file.isDirectory()){
+          classNames.addAll(listClassNames(file));
+        } else if(file.isFile() && file.getName().endsWith(".java")){
+          String className = readClassName(file);
+          if(className != null){
+            classNames.add(className);
+          }
+        }
+      }
+    }
+    return classNames;
+  }
+
+
 	@Override
 	public void execute() throws MojoExecutionException {
 
 		try {
 
-			// Descriptor for service
-			Class<?> serviceClass = Class.forName(restServiceClassName);
-			ServiceDescriptorGenerator descGen = new ServiceDescriptorGenerator(Lists.newArrayList(serviceClass));
+      File f = new File(restServiceBaseDir);
+      if(f.isDirectory()){
+        for(String className : listClassNames(f)){
+          // Descriptor for service
+          Class<?> serviceClass = Class.forName(className);
+          ServiceDescriptorGenerator descGen = new ServiceDescriptorGenerator(Lists.newArrayList(serviceClass));
 
-			// To Typescript
-			{
-				Writer writer = createFileAndGetWriter(tsOutFolder, moduleName + ".d.ts");
-				Module tsModule = descGen.generateTypeScript(moduleName);
-				tsModule.write(writer);
-				writer.close();
-			}
+          // To Typescript
+          try(Writer writer = createFileAndGetWriter(tsOutFolder, className + ".d.ts")){
+            Module tsModule = descGen.generateTypeScript(className);
+            tsModule.write(writer);
+          }
 
-			// To JS
-			{
-				Writer outFileWriter = createFileAndGetWriter(jsOutFolder, moduleName + ".js");
-				descGen.generateJavascript(moduleName, outFileWriter);
-				outFileWriter.close();
-			}
+          // To JS
+          try(Writer outFileWriter = createFileAndGetWriter(jsOutFolder, className + ".js")){
+            descGen.generateJavascript(className, outFileWriter);
+            outFileWriter.close();
+          }
+        }
+      }
 
 		} catch (Exception e) {
 			throw new MojoExecutionException(e.getMessage(), e);
@@ -110,6 +179,7 @@ public class MainMojo extends AbstractMojo {
 	}
 
 	private Writer createFileAndGetWriter(File folder, String fileName) throws IOException {
+    folder.mkdirs();
 		File file = new File(folder, fileName);
 		getLog().info("Create file : " + file.getCanonicalPath());
 		file.createNewFile();

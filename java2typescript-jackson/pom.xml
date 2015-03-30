@@ -29,8 +29,8 @@
 		</developer>
 	</developers>
 	<properties>
-			<jackson.core.version>2.2.2</jackson.core.version>
-			<github.global.server>github</github.global.server>
+        <jackson.core.version>2.5.0</jackson.core.version>
+        <github.global.server>github</github.global.server>
 	</properties>
 
 	<dependencies>

@@ -24,6 +24,9 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.beans.Transient;
 import java.lang.reflect.Method;
+
+import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import java2typescript.jackson.module.grammar.AnyType;
 import java2typescript.jackson.module.grammar.FunctionType;
 import java2typescript.jackson.module.grammar.ClassType;
@@ -72,7 +75,7 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
 	}
 
 	private void addPublicMethods() {
-
+    AnnotatedClass annotatedClass = AnnotatedClass.construct(this.getClass(),new JacksonAnnotationIntrospector(), null);
 		for (Method method : this.clazz.getDeclaredMethods()) {
 
 			// Only public
@@ -94,7 +97,7 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
 			if (method.getAnnotation(Transient.class) != null)
 				continue;
 
-			addMethod(method);
+			addMethod(annotatedClass, method);
 		}
 	}
 
@@ -111,10 +114,10 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
 		}
 	}
 
-	private void addMethod(Method method) {
+	private void addMethod(AnnotatedClass annotatedClass, Method method) {
 		FunctionType function = new FunctionType();
 
-		AnnotatedMethod annotMethod = new AnnotatedMethod(method, new AnnotationMap(), null);
+		AnnotatedMethod annotMethod = new AnnotatedMethod(annotatedClass, method, new AnnotationMap(), new AnnotationMap[]{});
 
 		function.setResultType(getTSTypeForClass(annotMethod));
 		for (int i = 0; i < annotMethod.getParameterCount(); i++) {
@@ -136,7 +139,6 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
 		addField(name, getTSTypeForHandler(this, handler, propertyTypeHint));
 	}
 
-	@Override
 	public void property(String name) throws JsonMappingException {
 		addField(name, AnyType.getInstance());
 	}
@@ -152,7 +154,6 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
 		addField(name, getTSTypeForHandler(this, handler, propertyTypeHint));
 	}
 
-	@Override
 	public void optionalProperty(String name) throws JsonMappingException {
 		addField(name, AnyType.getInstance());
 	}
@@ -170,7 +171,8 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
 
 			if (ser != null) {
 				if (type == null) {
-					throw new IllegalStateException("Missing type for property '" + writer.getName() + "'");
+					//throw new IllegalStateException("Missing type for property '" + writer.getName() + "'");
+          return AnyType.getInstance();
 				}
 				return getTSTypeForHandler(this, ser, type);
 			} else {
@@ -178,8 +180,9 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
 			}
 
 		} catch (Exception e) {
-			throw new RuntimeException(String.format(//
-					"Error when serializing %s, you should add a custom mapping for it", type.getRawClass()), e);
+//			throw new RuntimeException(String.format(//
+//					"Error when serializing %s, you should add a custom mapping for it", type.getRawClass()), e);
+      return AnyType.getInstance();
 		}
 
 	}
