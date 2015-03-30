@@ -36,47 +36,52 @@ Please refer to the documentation of the [maven plugin](java2typescript-maven-pl
 
 **java2typescript** handles all the HTTP REST standard itself, and provide REST services as vanilla Typescript methods, regardless of the HTTP method / mime to use.
 
-Consider the following JAX-RS service 
-```java
-@Path( "/people" ) 
-public interface PeopleRestService {
-	
-	
-	@Produces( { MediaType.APPLICATION_JSON } )
-	@GET
-	public Collection< Person > getPeoples( @QueryParam( "page") @DefaultValue( "1" ) final int page ) {
-		return peopleService.getPeople( page, 5 );
-	}
+Consider the following JAX-RS service
 
-	@Produces( { MediaType.APPLICATION_JSON } )
-	@Path( "/{email}" )
-	@GET
-	public Person getPeople( @PathParam( "email" ) final String email ) {
-		return peopleService.getByEmail( email );
-	}
-}
+
+```java
+    
+    @Path( "/people" ) 
+    public interface PeopleRestService {
+      
+      
+      @Produces( { MediaType.APPLICATION_JSON } )
+      @GET
+      public Collection< Person > getPeoples( @QueryParam( "page") @DefaultValue( "1" ) final int page ) {
+        return peopleService.getPeople( page, 5 );
+      }
+    
+      @Produces( { MediaType.APPLICATION_JSON } )
+      @Path( "/{email}" )
+      @GET
+      public Person getPeople( @PathParam( "email" ) final String email ) {
+        return peopleService.getByEmail( email );
+      }
+    }
 ```
 
 The **[maven plugin](java2typescript-maven-plugin)** will produce the following typescript definition file :
 
+
 ```typescript
-export module People {
-
-export interface PeopleRestService {
-    getPeopleList(page: number): Person[];
-    getPeople(email: string): Person;
-}
-
-export interface Person {
-    email: string;
-    firstName: string;
-    lastName: string;
-}
-
-export var rootUrl: string;
-export var peopleRestService: PeopleRestService;
-export var adapter: (httpMethod: string, path: string, getParams: Object, postParams: Object, body: any)=> void;
-}
+    
+    export module People {
+    
+    export interface PeopleRestService {
+        getPeopleList(page: number): Person[];
+        getPeople(email: string): Person;
+    }
+    
+    export interface Person {
+        email: string;
+        firstName: string;
+        lastName: string;
+    }
+    
+    export var rootUrl: string;
+    export var peopleRestService: PeopleRestService;
+    export var adapter: (httpMethod: string, path: string, getParams: Object, postParams: Object, body: any)=> void;
+    }
 ```
 
 The module **People** contains both the definition of the DTO **Person** and the service **PeopleRestService**, it also provides 3 properties :
@@ -84,22 +89,60 @@ The module **People** contains both the definition of the DTO **Person** and the
 * **peopleRESTService** : An instance of the service
 * **adapter** : An adapter for RESt service call. Set to Jquery adapter by default.
 
-Then, in your application, you can call the service like so 
+Then, in your application, you can call the service like so
+
+
 ```typescript
-/// <reference path="People.d.ts" />
-import p = People;
-import Person = p.Person;
-import prs = p.peopleRestService;
-
-p.rootUrl = "http://someurl/root/";
-
-var personList : Person[] = prs.getPeopleList(1);
-var onePerson : Person = prs.getPeople("rrr@eee.com");
-
+    
+    /// <reference path="People.d.ts" />
+    import p = People;
+    import Person = p.Person;
+    import prs = p.peopleRestService;
+    
+    p.rootUrl = "http://someurl/root/";
+    
+    var personList : Person[] = prs.getPeopleList(1);
+    var onePerson : Person = prs.getPeople("rrr@eee.com");
 ```
  
 Don't forget to import the generated file **People.js** in the final HTML page.
 
+# Setting up your pom.xml configuration
+
+
+When referencing the plugin in your local environment, add this to your settings.xml in the pluginGroups section.
+
+
+
+```xml
+     
+     <pluginGroups>
+          <pluginGroup>java2typescript</pluginGroup>
+     </pluginGroups>
+```
+
+
+Example pom.xml configuration.
+
+
+```xml
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>java2typescript</groupId>
+                <artifactId>java2typescript-maven-plugin</artifactId>
+                <version>0.2-SNAPSHOT</version>
+                <configuration>
+                    <tsOutFolder>${project.build.directory}/generated/typescript</tsOutFolder>
+                    <jsOutFolder>${project.build.directory}/generated/javascript</jsOutFolder>
+                    <restServiceBaseDir>src/main/java/com/fm/sm/rest</restServiceBaseDir>
+                    <moduleName>smrest</moduleName>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+```
 
 # Licence
 
