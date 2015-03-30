@@ -42,12 +42,6 @@
 			<artifactId>java2typescript-jackson</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>java2typescript</groupId>
-			<artifactId>sample-web-app</artifactId>
-			<version>${project.version}</version>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 
 </project>

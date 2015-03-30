@@ -3,3 +3,6 @@ target
 .classpath
 .project
 release.properties
+.idea
+*.iml
+atlassian-ide-plugin.xml
