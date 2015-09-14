@@ -13,19 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package java2typescript.jackson.module.grammar;
 
-import java2typescript.jackson.module.grammar.base.AbstractPrimitiveType;
+package java2typescript.jaxrs.model;
 
-public class BooleanType extends AbstractPrimitiveType {
+import java2typescript.jackson.module.grammar.base.AbstractType;
 
-  static private BooleanType instance = new BooleanType();
+import java.io.IOException;
+import java.io.Writer;
 
-  private BooleanType() {
-    super("boolean");
+public class ContextUrl extends AbstractType {
+
+  private String contextUrl = "";
+
+  public ContextUrl(String contextUrl) {
+    this.contextUrl = contextUrl == null? "" : contextUrl;
   }
 
-  static public BooleanType getInstance() {
-    return instance;
+  @Override
+  public void write(Writer writer) throws IOException {
+    writer.write("    var contextUrl = '" + contextUrl + "';\n");
   }
 }

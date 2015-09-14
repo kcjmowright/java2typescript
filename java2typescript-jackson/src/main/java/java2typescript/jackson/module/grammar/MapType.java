@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2013 Raphael Jolivet
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,39 +17,39 @@ package java2typescript.jackson.module.grammar;
 
 import java.io.IOException;
 import java.io.Writer;
+
 import java2typescript.jackson.module.grammar.base.AbstractType;
 
-
 public class MapType extends AbstractType {
-	private AbstractType valueType;
-	private AbstractType keyType;
+  private AbstractType valueType;
+  private AbstractType keyType;
 
-	public MapType() {
-	}
+  public MapType() {
+  }
 
-	@Override
-	public void write(Writer writer) throws IOException {
-		writer.write("{ [key: ");
-		keyType.write(writer);
-		writer.write(" ]: ");
-		valueType.write(writer);
-		writer.write(";}");
-	}
+  @Override
+  public void write(Writer writer) throws IOException {
+    writer.write("{ [key: ");
+    keyType.write(writer);
+    writer.write(" ]: ");
+    valueType.write(writer);
+    writer.write(";}");
+  }
 
-	public AbstractType getValueType() {
-		return valueType;
-	}
+  public AbstractType getValueType() {
+    return valueType;
+  }
 
-	public void setValueType(AbstractType valueType) {
-		this.valueType = valueType;
-	}
+  public void setValueType(AbstractType valueType) {
+    this.valueType = valueType;
+  }
 
-	public AbstractType getKeyType() {
-		return keyType;
-	}
+  public AbstractType getKeyType() {
+    return keyType;
+  }
 
-	public void setKeyType(AbstractType keyType) {
-		this.keyType = keyType;
-	}
+  public void setKeyType(AbstractType keyType) {
+    this.keyType = keyType;
+  }
 
 }

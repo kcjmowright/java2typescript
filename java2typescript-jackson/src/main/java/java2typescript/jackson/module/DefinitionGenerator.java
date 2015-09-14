@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2013 Raphael Jolivet
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,12 +15,14 @@
  ******************************************************************************/
 package java2typescript.jackson.module;
 
+import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java2typescript.jackson.module.grammar.Module;
-import java2typescript.jackson.module.visitors.TSJsonFormatVisitorWrapper;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java2typescript.jackson.module.grammar.Namespace;
+import java2typescript.jackson.module.visitors.TSJsonFormatVisitorWrapper;
 
 /**
  * Main class that generates a TypeScript grammar tree (a Module), out of a
@@ -28,29 +30,44 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class DefinitionGenerator {
 
-	private final ObjectMapper mapper;
+  /**
+   * ISO-8601 Format
+   */
+  public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
 
-	public DefinitionGenerator(ObjectMapper mapper) {
-		this.mapper = mapper;
-	}
+  private final ObjectMapper mapper;
 
-	/**
-	 * @param module
-	 *            Module to be filled with named types (classes, enums, ...)
-	 * @param classes
-	 *            Class for which generating definition
-	 * @throws JsonMappingException
-	 */
-	public Module generateTypeScript(String moduleName, Collection<? extends Class<?>> classes)
-			throws JsonMappingException {
+  public DefinitionGenerator(ObjectMapper mapper) {
+    this.mapper = mapper;
+  }
 
-		Module module = new Module(moduleName);
-		TSJsonFormatVisitorWrapper visitor = new TSJsonFormatVisitorWrapper(module);
+  /**
+   * @param baseModuleName
+   *            optional base Namespace
+   * @param subModuleName
+   *            Module to be filled with named types (classes, enums, ...)
+   * @param classes
+   *            Class for which generating definition
+   * @throws JsonMappingException
+   */
+  public Namespace generateTypeScript(String baseModuleName, String subModuleName, Collection<? extends Class<?>> classes)
+      throws JsonMappingException {
 
-		for (Class<?> clazz : classes) {
-			mapper.acceptJsonFormatVisitor(clazz, visitor);
-		}
-		return module;
-	}
+    mapper.setDateFormat(new SimpleDateFormat(DATE_FORMAT));
+
+    Namespace module = new Namespace(subModuleName);
+    TSJsonFormatVisitorWrapper visitor = new TSJsonFormatVisitorWrapper(module);
+
+    for (Class<?> clazz : classes) {
+      mapper.acceptJsonFormatVisitor(clazz, visitor);
+    }
+
+    if (baseModuleName != null) {
+      Namespace baseModule = new Namespace(baseModuleName, false);
+      baseModule.getModules().put(subModuleName, module);
+      return baseModule;
+    }
+    return module;
+  }
 
 }

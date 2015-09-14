@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013 Raphael Jolivet
+ * Copyright 2015 Justin Wright
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,16 @@
  ******************************************************************************/
 package java2typescript.jackson.module.grammar;
 
-import java2typescript.jackson.module.grammar.base.AbstractPrimitiveType;
+import java.io.IOException;
+import java.io.Writer;
 
-public class BooleanType extends AbstractPrimitiveType {
+import java2typescript.jackson.module.grammar.base.AbstractType;
 
-  static private BooleanType instance = new BooleanType();
+public class AngularHttpService extends AbstractType {
 
-  private BooleanType() {
-    super("boolean");
+
+  public void write(Writer writer) throws IOException {
+    writer.write("ng.IHttpService");
   }
 
-  static public BooleanType getInstance() {
-    return instance;
-  }
 }

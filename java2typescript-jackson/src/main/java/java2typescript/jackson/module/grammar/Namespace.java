@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013 Raphael Jolivet
+ * Copyright 2015 Justin Wright
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,52 @@
  ******************************************************************************/
 package java2typescript.jackson.module.grammar;
 
+import static java.lang.String.format;
+
 import java.io.IOException;
 import java.io.Writer;
 
+import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 import java2typescript.jackson.module.grammar.base.AbstractType;
 
-public class ArrayType extends AbstractType {
-  private AbstractType itemType;
+public class Namespace extends Module {
 
-  public ArrayType() {
+  public Namespace(String name) {
+    super(name);
   }
 
-  public ArrayType(AbstractType aType) {
-    itemType = aType;
+  public Namespace(String name, boolean exported) {
+    super(name, exported);
   }
 
   @Override
   public void write(Writer writer) throws IOException {
-    itemType.write(writer);
-    writer.write("[]");
-  }
 
-  public void setItemType(AbstractType itemType) {
-    this.itemType = itemType;
+    if (this.isExported()) {
+      writer.write(format("export namespace %s {\n", getName()));
+      writer.write("  'use strict';\n\n");
+    } else {
+      writer.write(format("namespace %s {\n\n", getName()));
+    }
+
+    for (Module module : getModules().values()) {
+      module.write(writer);
+      writer.write("\n\n");
+    }
+
+    for (AbstractNamedType type : getNamedTypes().values()) {
+      writer.write("export ");
+      type.writeDef(writer);
+      writer.write("\n\n");
+    }
+
+    for (AbstractType type : getVars().values()) {
+      type.write(writer);
+      writer.write("\n\n");
+    }
+
+    writer.write("}\n");
+    writer.flush();
   }
 
 }

@@ -1,143 +1,134 @@
 package org.java2typescript.maven.plugin;
 
-/*
- * Copyright 2001-2005 The Apache Software Foundation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
+
 import java2typescript.jackson.module.grammar.Module;
 import java2typescript.jaxrs.ServiceDescriptorGenerator;
 
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
+import com.google.common.base.CaseFormat;
 
-import com.google.common.collect.Lists;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
- * Generate typescript file out of RESt service definition
- * 
- * @goal generate
- * @phase process-classes
- * @configurator include-project-dependencies
- * @requiresDependencyResolution compile+runtime
+ * Generate Typescript from REST service interfaces.
+ *
  */
+@Mojo(
+    name = "generate",
+    defaultPhase = LifecyclePhase.PROCESS_CLASSES,
+    requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME
+)
 public class MainMojo extends AbstractMojo {
-
-//	/**
-//	 * Full class name of the REST service
-//	 * @required
-//	 * @parameter
-//	 *    alias="serviceClass"
-//	 *    expression="${j2ts.serviceClass}"
-//	 */
-//	private String restServiceClassName;
-
-  	/**
-  	 * REST service interface directory
-  	 * @required
-  	 * @parameter
-  	 *    alias="serviceClass"
-  	 *    expression="${j2ts.serviceClass}"
-  	 */
-  private String restServiceBaseDir;
-
-	/**
-	 * Name of output module (ts,js)
-	 * @required 
-	 * @parameter
-	 *     alias="moduleName" 
-	 *     expression="${j2ts.moduleName}"
-	 */
-	private String moduleName;
-
-	/**
-	 * Path to output typescript folder
-	 * The name will be <moduleName>.d.ts
-	 * @required
-	 * @parameter 
-	 *    alias="tsOutFolder" 
-	 * 		expression="${j2ts.tsOutFolder}" 
-	 * 		default-value = "${project.build.directory}"
-	 */
-	private File tsOutFolder;
-
-	/**
-	 * Path to output Js file
-	 * The name will be <moduleName>.js
-	 * 
-	 * @required
-	 * @parameter 
-	 *    alias="jsOutFolder"
-	 * 		expression="${j2ts.jsOutFolder}" 
-	 * 		default-value = "${project.build.directory}"
-	 */
-	private File jsOutFolder;
 
 
   private static final String packageRegex = "^package\\s+([^;]+);$";
   private static final Pattern packagePattern = Pattern.compile(packageRegex);
-
   private static final String classRegex = "^public\\s+interface\\s+\\w+\\s+\\{\\s*$";
-  private static final Pattern classPattern = Pattern.compile(classRegex);
 
-  //private static final String re
 
+  /**
+   * REST service interface directory
+   */
+  @Parameter(alias = "restServiceBaseDir", required = true)
+  private String restServiceBaseDir;
+
+  /**
+   * Name of output module
+   */
+  @Parameter(alias = "moduleName", required = true)
+  private String moduleName;
+
+  /**
+   * Name of output submodule
+   */
+  @Parameter(alias = "subModuleName", required = true)
+  private String subModuleName;
+
+  /**
+   * The context URL
+   */
+  @Parameter(alias = "contextUrl", required = true)
+  private String contextUrl;
+
+
+  /**
+   * Path to output typescript folder
+   */
+  @Parameter(alias = "tsOutPath", defaultValue = "${project.build.directory}", required = true)
+  private File tsOutPath;
+
+  /**
+   *
+   */
+  @Parameter(defaultValue = "${project}", required = true, readonly = true)
+  private MavenProject project;
+
+  /**
+   *
+   * @param f the file
+   * @return
+   * @throws Exception
+   */
   public String readClassName(File f) throws Exception {
-    System.out.println("Reading class name for file " + f.getAbsolutePath());
-
     String fileName = f.getName();
+    getLog().info("Reading class name for file " + f.getAbsolutePath());
     final String fileClassName = fileName.substring(0, fileName.length() - 5);
     final Path path = Paths.get(f.getAbsolutePath());
     final Predicate<String> matchesClassRegex = (s) -> s.matches(classRegex);
     final Predicate<String> matchesFileName = (s) -> s.contains(fileClassName);
     String className = null;
 
-    if(Files.lines(path).anyMatch(matchesClassRegex.and(matchesFileName))){
+    if (Files.lines(path).anyMatch(matchesClassRegex.and(matchesFileName))) {
       final String packageName = Files.lines(path).filter(s -> s.matches(packageRegex)).findFirst().get();
       final Matcher packageMatcher = packagePattern.matcher(packageName);
-      if(packageMatcher.matches()){
+      if (packageMatcher.matches()) {
         className = packageMatcher.group(1) + "." + fileClassName;
-        System.out.println("Found classname : " + className);
+        getLog().info("Found classname : " + className);
       }
     }
     return className;
   }
 
-
-  public List<String> listClassNames(File dir) throws Exception{
+  /**
+   *
+   * @param dir
+   * @return
+   * @throws Exception
+   */
+  public List<String> listClassNames(File dir) throws Exception {
     List<String> classNames = new ArrayList<String>();
-    if(dir.isDirectory()){
-      for(File file: dir.listFiles()){
-        if(file.isDirectory()){
+    if (dir.isDirectory()) {
+      for (File file : dir.listFiles()) {
+        if (file.isDirectory()) {
           classNames.addAll(listClassNames(file));
-        } else if(file.isFile() && file.getName().endsWith(".java")){
+        } else if (file.isFile() && file.getName().endsWith(".java")) {
           String className = readClassName(file);
-          if(className != null){
+          if (className != null) {
             classNames.add(className);
           }
         }
@@ -146,45 +137,63 @@ public class MainMojo extends AbstractMojo {
     return classNames;
   }
 
+  /**
+   *
+   * @throws MojoExecutionException
+   */
+  @Override
+  @SuppressFBWarnings()
+  public void execute() throws MojoExecutionException {
 
-	@Override
-	public void execute() throws MojoExecutionException {
+    String baseName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, moduleName + "_" + subModuleName);
+    List<Class<?>> classes = new ArrayList<>();
+    Set<URL> urls = new HashSet<>();
 
-		try {
+    try {
+
+      for (String element : project.getCompileClasspathElements()) {
+        urls.add(new File(element).toURI().toURL());
+      }
+      ClassLoader urlClassLoader = URLClassLoader.newInstance(
+          urls.toArray(new URL[0]),
+          Thread.currentThread().getContextClassLoader());
 
       File f = new File(restServiceBaseDir);
-      if(f.isDirectory()){
-        for(String className : listClassNames(f)){
+      if (f.isDirectory()) {
+        for (String className : listClassNames(f)) {
           // Descriptor for service
-          Class<?> serviceClass = Class.forName(className);
-          ServiceDescriptorGenerator descGen = new ServiceDescriptorGenerator(Lists.newArrayList(serviceClass));
-
-          // To Typescript
-          try(Writer writer = createFileAndGetWriter(tsOutFolder, className + ".d.ts")){
-            Module tsModule = descGen.generateTypeScript(className);
-            tsModule.write(writer);
-          }
-
-          // To JS
-          try(Writer outFileWriter = createFileAndGetWriter(jsOutFolder, className + ".js")){
-            descGen.generateJavascript(className, outFileWriter);
-            outFileWriter.close();
-          }
+          Class<?> serviceClass = urlClassLoader.loadClass(className);
+          classes.add(serviceClass);
         }
       }
 
-		} catch (Exception e) {
-			throw new MojoExecutionException(e.getMessage(), e);
-		}
-	}
+      ServiceDescriptorGenerator descGen = new ServiceDescriptorGenerator(classes);
+      // To Typescript Interfaces
+      try (Writer writer = createFileAndGetWriter(tsOutPath, baseName + ".ts")) {
+        Module tsModule = descGen.generateTypeScript(moduleName, subModuleName, contextUrl);
+        tsModule.write(writer);
+      }
 
-	private Writer createFileAndGetWriter(File folder, String fileName) throws IOException {
+    } catch (Exception e) {
+      throw new MojoExecutionException(e.getMessage(), e);
+    }
+  }
+
+  /**
+   *
+   * @param folder
+   * @param fileName
+   * @return
+   * @throws IOException
+   */
+  private Writer createFileAndGetWriter(File folder, String fileName) throws IOException {
     folder.mkdirs();
-		File file = new File(folder, fileName);
-		getLog().info("Create file : " + file.getCanonicalPath());
-		file.createNewFile();
-		FileOutputStream stream = new FileOutputStream(file);
-		OutputStreamWriter writer = new OutputStreamWriter(stream);
-		return writer;
-	};
+    File file = new File(folder, fileName);
+    getLog().info("Create file : " + file.getCanonicalPath());
+    file.createNewFile();
+    FileOutputStream stream = new FileOutputStream(file);
+    OutputStreamWriter writer = new OutputStreamWriter(stream, Charset.forName("UTF-8"));
+    return writer;
+  }
+
 }

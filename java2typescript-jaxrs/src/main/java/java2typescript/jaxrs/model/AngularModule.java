@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013 Raphael Jolivet
+ * Copyright 2015 Raphael Jolivet
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package java2typescript.jackson.module.grammar;
 
-import java2typescript.jackson.module.grammar.base.AbstractPrimitiveType;
+package java2typescript.jaxrs.model;
 
-public class BooleanType extends AbstractPrimitiveType {
+import java.io.IOException;
+import java.io.Writer;
 
-  static private BooleanType instance = new BooleanType();
+import static java.lang.String.format;
 
-  private BooleanType() {
-    super("boolean");
+public class AngularModule extends BaseModel {
+
+  public AngularModule(String name) {
+    super(name);
   }
 
-  static public BooleanType getInstance() {
-    return instance;
+  @Override
+  public void write(Writer writer) throws IOException {
+    writer.write(format("export var %s: ng.IModule = angular.module('%s', []);", name, lowerCamelName));
   }
+
 }

@@ -13,19 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package java2typescript.jackson.module.grammar;
 
-import java2typescript.jackson.module.grammar.base.AbstractPrimitiveType;
+package java2typescript.jaxrs.model;
 
-public class BooleanType extends AbstractPrimitiveType {
+import com.google.common.base.CaseFormat;
+import java2typescript.jackson.module.grammar.base.AbstractType;
 
-  static private BooleanType instance = new BooleanType();
+public abstract class BaseModel extends AbstractType {
 
-  private BooleanType() {
-    super("boolean");
+  protected String name;
+  protected String lowerCamelName;
+
+  public BaseModel() {
+
   }
 
-  static public BooleanType getInstance() {
-    return instance;
+  public BaseModel(String name) {
+    this.name = name;
+    this.lowerCamelName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name);
   }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+    this.lowerCamelName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name);
+  }
+
+  public String getLowerCamelName() {
+    return lowerCamelName;
+  }
+
 }

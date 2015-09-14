@@ -7,7 +7,8 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import org.apache.cxf.bus.spring.SpringBus;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
-import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+import org.apache.cxf.jaxrs.provider.JAXBElementProvider;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
@@ -46,9 +47,9 @@ public class AppConfig {
 	public PeopleService peopleService() {
 		return new PeopleService();
 	}
-		
+
 	@Bean
-	public JacksonJsonProvider jsonProvider() {
-		return new JacksonJsonProvider();
+	public JAXBElementProvider jsonProvider() {
+		return new org.apache.cxf.jaxrs.provider.JAXBElementProvider();
 	}
 }
