@@ -125,34 +125,12 @@
             </plugin>
         </plugins>
     </reporting>
-    <!-- -->
-    <!--<build>-->
-    <!--<plugins>-->
-    <!--<plugin>-->
-    <!--<groupId>com.github.github</groupId>-->
-    <!--<artifactId>site-maven-plugin</artifactId>-->
-    <!--<version>0.8</version>-->
-    <!--<configuration>-->
-    <!--<message>Maven artifacts for ${project.version}</message>  -->
-    <!--<noJekyll>true</noJekyll>-->
-    <!--<outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> -->
-    <!--<branch>refs/heads/mvn-repo</branch>                       &lt;!&ndash; remote branch name &ndash;&gt;-->
-    <!--<includes><include>**/*</include></includes>-->
-    <!--<repositoryName>java2typescript</repositoryName>-->
-    <!--<repositoryOwner>raphaeljolivet</repositoryOwner>-->
-    <!--<merge>true</merge>-->
-    <!--</configuration>-->
-    <!--<executions>-->
-    <!--&lt;!&ndash; run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase &ndash;&gt;-->
-    <!--<execution>-->
-    <!--<goals>-->
-    <!--<goal>site</goal>-->
-    <!--</goals>-->
-    <!--<phase>deploy</phase>-->
-    <!--</execution>-->
-    <!--</executions>-->
-    <!--</plugin>-->
-    <!--</plugins>-->
-    <!--</build>-->
+
+    <scm>
+        <connection>scm:git:https://github.com/kcjmowright/java2typescript.git</connection>
+        <developerConnection>scm:git:https://github.com/kcjmowright/java2typescript.git</developerConnection>
+        <url>scm:git:https://github.com/kcjmowright/java2typescript.git</url>
+        <tag>HEAD</tag>
+    </scm>
 
 </project>
