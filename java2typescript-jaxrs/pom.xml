@@ -39,7 +39,7 @@
     <parent>
         <groupId>java2typescript</groupId>
         <artifactId>java2typescript</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
