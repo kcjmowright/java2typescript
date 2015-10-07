@@ -25,6 +25,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static org.junit.Assert.assertTrue;
@@ -53,6 +54,7 @@ public class DefinitionGeneratorTest {
     public ArrayList<String> stringArrayList;
     public Collection<Boolean> booleanCollection;
     public Enum _enum;
+    public Optional<Integer> _optionalInteger;
 
     public String aMethod(boolean recParam, String param2) {
       return "toto";

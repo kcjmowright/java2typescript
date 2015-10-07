@@ -16,6 +16,7 @@
 package java2typescript.jackson.module.visitors;
 
 import static java.lang.reflect.Modifier.isPublic;
+import static java.lang.reflect.Modifier.isStatic;
 
 import static com.fasterxml.jackson.databind.PropertyName.NO_NAME;
 
@@ -34,6 +35,8 @@ import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.PropertyMetadata;
+import com.fasterxml.jackson.databind.PropertyName;
 import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
@@ -54,30 +57,32 @@ import java2typescript.jackson.module.grammar.base.AbstractType;
 
 public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassType> implements JsonObjectFormatVisitor {
 
-  private static final HashSet<String> ignorableTypes = new HashSet<>(Arrays.asList(
-      "MediaType",
-      "DataFlavor",
-      "Attachment",
-      "MultipartBody"
-  ));
+//  private static final HashSet<String> ignorableTypes = new HashSet<>(Arrays.asList(
+//      "MediaType",
+//      "DataFlavor",
+//      "Attachment",
+//      "MultipartBody"
+//  ));
   private Class clazz;
 
   public TSJsonObjectFormatVisitor(ABaseTSJsonFormatVisitor<?> parentHolder, String className, Class clazz) {
     super(parentHolder);
     type = new ClassType(className);
     this.clazz = clazz;
-    addPublicMethods();
   }
 
   private void addField(String name, AbstractType fieldType) {
     type.getFields().put(name, fieldType);
   }
 
-  private boolean isAccessorMethod(Method method, BeanInfo beanInfo) {
+  private boolean isIgnoreableMethod(Method method, BeanInfo beanInfo) {
     if ("toString".equalsIgnoreCase(method.getName())) {
       return true;
     }
     if ("equals".equalsIgnoreCase(method.getName())) {
+      return true;
+    }
+    if ("hashCode".equalsIgnoreCase(method.getName())) {
       return true;
     }
     for (Annotation annotation : method.getAnnotations()) {
@@ -99,19 +104,19 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
     return false;
   }
 
-  private void addPublicMethods() {
+  public void addPublicMethods() {
     AnnotatedClass annotatedClass = AnnotatedClass.construct(this.getClass(), new JacksonAnnotationIntrospector(), null);
     for (Method method : this.clazz.getDeclaredMethods()) {
 
-      // Only public
-      if (!isPublic(method.getModifiers())) {
+      // Only public and non-static
+      if (!isPublic(method.getModifiers()) || isStatic(method.getModifiers())) {
         continue;
       }
 
-      // Exclude accessors
+      // Exclude ignorable methods.
       try {
         BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
-        if (isAccessorMethod(method, beanInfo)) {
+        if (isIgnoreableMethod(method, beanInfo)) {
           continue;
         }
       } catch (Exception e) {
@@ -129,8 +134,8 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
   private AbstractType getTSTypeForClass(AnnotatedMember member) {
 
     TypeBindings bindings = new TypeBindings(TypeFactory.defaultInstance(), member.getDeclaringClass());
-    BeanProperty prop = new BeanProperty.Std(member.getName(), member.getType(bindings), NO_NAME,
-        new AnnotationMap(), member, false);
+    BeanProperty prop = new BeanProperty.Std(new PropertyName(member.getName()), member.getType(bindings), NO_NAME, new AnnotationMap(),
+        member, PropertyMetadata.STD_OPTIONAL);
 
     try {
       return getTSTypeForProperty(prop);
@@ -211,7 +216,7 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
     if (writer instanceof BeanPropertyWriter) {
       ser = ((BeanPropertyWriter) writer).getSerializer();
     }
-    if (ser == null && (!ignorableTypes.contains(type.getName()))) {
+    if (ser == null) {
       ser = getProvider().findValueSerializer(writer.getType(), writer);
     }
     return ser;
