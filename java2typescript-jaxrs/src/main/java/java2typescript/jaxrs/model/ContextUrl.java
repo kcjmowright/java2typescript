@@ -31,6 +31,6 @@ public class ContextUrl extends AbstractType {
 
   @Override
   public void write(Writer writer) throws IOException {
-    writer.write("    var contextUrl = '" + contextUrl + "';\n");
+    writer.write("    const contextUrl = '" + contextUrl + "';\n");
   }
 }

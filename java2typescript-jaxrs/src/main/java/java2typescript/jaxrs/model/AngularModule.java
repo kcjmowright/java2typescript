@@ -29,7 +29,7 @@ public class AngularModule extends BaseModel {
 
   @Override
   public void write(Writer writer) throws IOException {
-    writer.write(format("export var %s: ng.IModule = angular.module('%s', []);", name, lowerCamelName));
+    writer.write(format("export const %s: ng.IModule = angular.module('%s', []);", name, lowerCamelName));
   }
 
 }

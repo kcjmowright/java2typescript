@@ -72,7 +72,7 @@ public abstract class ABaseTSJsonFormatVisitor<T extends AbstractType> implement
   public Map<JavaType, AbstractType> getComputedTypes() {
     if (parentHolder == null || parentHolder == this) {
       if (computedTypes == null) {
-        computedTypes = new HashMap<JavaType, AbstractType>();
+        computedTypes = new HashMap<>();
       }
       return computedTypes;
     }

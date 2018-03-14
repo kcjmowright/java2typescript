@@ -21,7 +21,7 @@ import java.util.Collection;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java2typescript.jackson.module.grammar.Namespace;
+import java2typescript.jackson.module.grammar.Module;
 import java2typescript.jackson.module.visitors.TSJsonFormatVisitorWrapper;
 
 /**
@@ -44,29 +44,22 @@ public class DefinitionGenerator {
   /**
    * @param baseModuleName
    *            optional base Namespace
-   * @param subModuleName
-   *            Module to be filled with named types (classes, enums, ...)
    * @param classes
    *            Class for which generating definition
    * @throws JsonMappingException
    */
-  public Namespace generateTypeScript(String baseModuleName, String subModuleName, Collection<? extends Class<?>> classes)
+  public Module generateTypeScript(String baseModuleName, Collection<? extends Class<?>> classes)
       throws JsonMappingException {
 
     mapper.setDateFormat(new SimpleDateFormat(DATE_FORMAT));
 
-    Namespace module = new Namespace(subModuleName);
+    Module module = new Module(baseModuleName);
     TSJsonFormatVisitorWrapper visitor = new TSJsonFormatVisitorWrapper(module);
 
     for (Class<?> clazz : classes) {
       mapper.acceptJsonFormatVisitor(clazz, visitor);
     }
 
-    if (baseModuleName != null) {
-      Namespace baseModule = new Namespace(baseModuleName, false);
-      baseModule.getModules().put(subModuleName, module);
-      return baseModule;
-    }
     return module;
   }
 

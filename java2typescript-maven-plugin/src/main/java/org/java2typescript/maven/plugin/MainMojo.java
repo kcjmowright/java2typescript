@@ -170,7 +170,7 @@ public class MainMojo extends AbstractMojo {
       ServiceDescriptorGenerator descGen = new ServiceDescriptorGenerator(classes);
       // To Typescript Interfaces
       try (Writer writer = createFileAndGetWriter(tsOutPath, baseName + ".ts")) {
-        Module tsModule = descGen.generateTypeScript(moduleName, subModuleName, contextUrl);
+        Module tsModule = descGen.generateTypeScript(moduleName, contextUrl);
         tsModule.write(writer);
       }
 

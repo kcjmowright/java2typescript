@@ -53,3 +53,10 @@ Add the following to your ~/.m2/settings.xml, otherwise you have to use the full
       <pluginGroup>java2typescript</pluginGroup> 
     </pluginGroups>
 ```
+
+
+### Debugging
+
+https://stackoverflow.com/questions/2973888/debug-a-maven-plugins-execution-in-a-maven-web-project
+
+### Setting up d

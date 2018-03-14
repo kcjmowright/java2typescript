@@ -15,8 +15,6 @@
  ******************************************************************************/
 package java2typescript.jackson.module.grammar;
 
-import static java.lang.String.format;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashMap;
@@ -28,8 +26,6 @@ import java2typescript.jackson.module.grammar.base.AbstractType;
 
 public class Module {
 
-  private boolean exported;
-
   private String name;
 
   private Map<String, Module> modules = new HashMap<>();
@@ -38,14 +34,8 @@ public class Module {
 
   private Map<String, AbstractType> vars = new LinkedHashMap<>();
 
-
   public Module(String name) {
-    this(name, true);
-  }
-
-  public Module(String name, boolean exported) {
     this.name = name;
-    this.exported = exported;
   }
 
   public Map<String, AbstractNamedType> getNamedTypes() {
@@ -60,14 +50,6 @@ public class Module {
     return modules;
   }
 
-  public boolean isExported() {
-    return exported;
-  }
-
-  public void setExported(boolean exported) {
-    this.exported = exported;
-  }
-
   public String getName() {
     return name;
   }
@@ -77,13 +59,6 @@ public class Module {
   }
 
   public void write(Writer writer) throws IOException {
-
-    if (exported) {
-      writer.write(format("export module %s {\n", name));
-      writer.write("  'use strict';\n\n");
-    } else {
-      writer.write(format("module %s {\n\n", name));
-    }
 
     for (Module module : modules.values()) {
       module.write(writer);
@@ -101,7 +76,6 @@ public class Module {
       writer.write("\n\n");
     }
 
-    writer.write("}\n");
     writer.flush();
   }
 

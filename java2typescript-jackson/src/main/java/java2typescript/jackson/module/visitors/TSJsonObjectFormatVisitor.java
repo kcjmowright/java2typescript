@@ -201,10 +201,8 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
       JsonSerializer<Object> ser = getSer(writer);
       if (ser != null) {
         return getTSTypeForHandler(this, ser, type);
-      } else {
-        return AnyType.getInstance();
       }
-
+      return AnyType.getInstance();
     } catch (Exception e) {
       return AnyType.getInstance();
     }

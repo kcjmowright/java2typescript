@@ -34,11 +34,22 @@ public class EnumType extends AbstractNamedType {
 
   @Override
   public void writeDef(Writer writer) throws IOException {
-    writer.write(format("enum %s {\n", name));
+    writer.write(format("interface I%s {\n", name, name));
     for (String value : values) {
-      writer.write(format("    %s,\n", value));
+      writer.write(format("    %s: string,\n", value));
     }
-    writer.write("}");
+    writer.write("}\n\n");
+
+    writer.write(format("export const %s: I%s = {\n", name, name));
+    for (String value : values) {
+      writer.write(format("    %s: '%s',\n", value, value));
+    }
+    writer.write("};");
+  }
+
+  @Override
+  public void write(Writer writer) throws IOException {
+    writer.write("I" + name);
   }
 
   public List<String> getValues() {

@@ -15,52 +15,38 @@
  ******************************************************************************/
 package java2typescript.jackson.module.grammar;
 
-import static java.lang.String.format;
-
 import java.io.IOException;
 import java.io.Writer;
 
-import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 import java2typescript.jackson.module.grammar.base.AbstractType;
 
-public class Namespace extends Module {
+/**
+ *
+ */
+public class AngularObservableType extends AbstractType {
 
-  public Namespace(String name) {
-    super(name);
+  private AbstractType type;
+
+  public AngularObservableType(AbstractType type) {
+    this.type = type;
   }
 
-  public Namespace(String name, boolean exported) {
-    super(name, exported);
+  public AbstractType getType() {
+    return type;
   }
 
-  @Override
+  public void setType(AbstractType type) {
+    this.type = type;
+  }
+
   public void write(Writer writer) throws IOException {
-
-    if (this.isExported()) {
-      writer.write(format("export namespace %s {\n", getName()));
-      writer.write("  'use strict';\n\n");
+    if (type == null) {
+      writer.write("Observable");
     } else {
-      writer.write(format("namespace %s {\n\n", getName()));
-    }
-
-    for (Module module : getModules().values()) {
-      module.write(writer);
-      writer.write("\n\n");
-    }
-
-    for (AbstractNamedType type : getNamedTypes().values()) {
-      writer.write("export ");
-      type.writeDef(writer);
-      writer.write("\n\n");
-    }
-
-    for (AbstractType type : getVars().values()) {
+      writer.write("Observable<");
       type.write(writer);
-      writer.write("\n\n");
+      writer.write(">");
     }
-
-    writer.write("}\n");
-    writer.flush();
   }
 
 }

@@ -42,7 +42,7 @@ public class FunctionType extends AbstractType {
     int i = 1;
     for (Entry<String, AbstractType> entry : parameters.entrySet()) {
       writer.write(entry.getKey());
-      writer.write(": ");
+      writer.write("?: ");
       entry.getValue().write(writer);
       if (i < parameters.size()) {
         writer.write(", ");

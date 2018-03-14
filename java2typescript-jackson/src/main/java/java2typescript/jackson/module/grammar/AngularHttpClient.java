@@ -20,33 +20,11 @@ import java.io.Writer;
 
 import java2typescript.jackson.module.grammar.base.AbstractType;
 
-/**
- *
- */
-public class AngularPromiseType extends AbstractType {
+public class AngularHttpClient extends AbstractType {
 
-  private AbstractType type;
-
-  public AngularPromiseType(AbstractType type) {
-    this.type = type;
-  }
-
-  public AbstractType getType() {
-    return type;
-  }
-
-  public void setType(AbstractType type) {
-    this.type = type;
-  }
 
   public void write(Writer writer) throws IOException {
-    if (type == null) {
-      writer.write("ng.IPromise");
-    } else {
-      writer.write("ng.IPromise<");
-      type.write(writer);
-      writer.write(">");
-    }
+    writer.write("HttpClient");
   }
 
 }

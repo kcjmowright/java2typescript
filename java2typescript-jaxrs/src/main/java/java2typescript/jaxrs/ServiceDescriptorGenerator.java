@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import java2typescript.jackson.module.DefinitionGenerator;
+import java2typescript.jackson.module.grammar.AnyType;
 import java2typescript.jaxrs.model.AngularModule;
 import java2typescript.jaxrs.model.AngularRestService;
 import java2typescript.jaxrs.model.ContextUrl;
@@ -32,11 +33,10 @@ import java2typescript.jaxrs.model.HttpMethod;
 import java2typescript.jaxrs.model.Param;
 import java2typescript.jaxrs.model.RestMethod;
 import com.google.common.base.CaseFormat;
-import java2typescript.jackson.module.grammar.AngularPromiseType;
+import java2typescript.jackson.module.grammar.AngularObservableType;
 import java2typescript.jackson.module.grammar.ClassType;
 import java2typescript.jackson.module.grammar.FunctionType;
 import java2typescript.jackson.module.grammar.Module;
-import java2typescript.jackson.module.grammar.Namespace;
 import java2typescript.jackson.module.grammar.VoidType;
 import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 import java2typescript.jackson.module.grammar.base.AbstractType;
@@ -122,11 +122,10 @@ public class ServiceDescriptorGenerator {
    * @param classes
    * @param angularModule
    * @param baseModuleName
-   * @param subModuleName
    * @return
    */
   private Collection<AngularRestService> generateRestServices(Collection<? extends Class<?>> classes, AngularModule angularModule,
-      String baseModuleName, String subModuleName) {
+      String baseModuleName) {
 
     List<AngularRestService> services = new ArrayList<AngularRestService>();
     for (Class<?> clazz : classes) {
@@ -134,7 +133,6 @@ public class ServiceDescriptorGenerator {
       service.setName(clazz.getSimpleName());
       service.setAngularModule(angularModule.getName());
       service.setBaseModule(baseModuleName);
-      service.setSubModule(subModuleName);
 
       Path pathAnnotation = clazz.getAnnotation(Path.class);
       String pathValue = "";
@@ -145,7 +143,9 @@ public class ServiceDescriptorGenerator {
       for (Method method : clazz.getDeclaredMethods()) {
         if (Modifier.isPublic(method.getModifiers())) {
           RestMethod restMethod = generateMethod(method);
-          service.getMethods().put(restMethod.getName(), restMethod);
+          if(restMethod != null) {
+            service.getMethods().put(restMethod.getName(), restMethod);
+          }
         }
       }
       services.add(service);
@@ -154,39 +154,29 @@ public class ServiceDescriptorGenerator {
   }
 
   /**
-   *
-   * @param baseModuleName optional base module name
-   * @param subModuleName required
+   *  @param baseModuleName base module name
    * @param context the context url
    */
-  public Namespace generateTypeScript(String baseModuleName, String subModuleName, String context) throws JsonMappingException {
+  public Module generateTypeScript(String baseModuleName, String context) throws JsonMappingException {
     DefinitionGenerator defGen = new DefinitionGenerator(mapper);
-    Namespace module = defGen.generateTypeScript(baseModuleName, subModuleName, classes);
-    Module theModule = module;
-    String angularModuleName = subModuleName;
+    Module module = defGen.generateTypeScript(baseModuleName, classes);
+    String angularModuleName = baseModuleName;
 
-    if (baseModuleName != null) {
-      angularModuleName = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, baseModuleName) + "_" +
-          CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, angularModuleName);
-      angularModuleName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, angularModuleName);
-      theModule = module.getModules().values().iterator().next();
-    } else {
-      angularModuleName = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, angularModuleName);
-    }
+    angularModuleName = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, angularModuleName);
 
     AngularModule angularModule = new AngularModule(angularModuleName);
-    theModule.getVars().put(angularModuleName, angularModule);
+    module.getVars().put(angularModuleName, angularModule);
 
-    theModule.getVars().put("context", new ContextUrl(context));
+    module.getVars().put("context", new ContextUrl(context));
 
-    Collection<AngularRestService> restServices = generateRestServices(classes, angularModule, baseModuleName, subModuleName);
+    Collection<AngularRestService> restServices = generateRestServices(classes, angularModule, baseModuleName);
     for (AngularRestService restService : restServices) {
-      AbstractNamedType abstractNamedType = theModule.getNamedTypes().get(restService.getName());
+      AbstractNamedType abstractNamedType = module.getNamedTypes().get(restService.getName());
       if (abstractNamedType instanceof ClassType) {
         ClassType classDef = (ClassType) abstractNamedType;
         decorateParamNames(restService, classDef);
         restService.setClassDef(classDef);
-        theModule.getVars().put(restService.getName(), restService);
+        module.getVars().put(restService.getName(), restService);
       }
     }
 
@@ -215,7 +205,8 @@ public class ServiceDescriptorGenerator {
       restMethod.setHttpMethod(HttpMethod.DELETE);
     }
     if (restMethod.getHttpMethod() == null) {
-      throw new RuntimeException("No Http method defined for method : " + method.getName());
+      // throw new RuntimeException("No Http method defined for method : " + method.getName());
+      return null;
     }
     restMethod.setParams(generateParams(method));
 
@@ -324,7 +315,9 @@ public class ServiceDescriptorGenerator {
       }
 
       if (! (function.getResultType() instanceof VoidType)) {
-        function.setResultType(new AngularPromiseType(function.getResultType()));
+        function.setResultType(new AngularObservableType(function.getResultType()));
+      } else {
+        function.setResultType(new AngularObservableType(AnyType.getInstance()));
       }
     }
   }

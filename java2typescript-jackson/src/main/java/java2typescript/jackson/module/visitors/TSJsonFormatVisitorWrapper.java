@@ -71,9 +71,8 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
     JsonTypeName typeName = type.getRawClass().getAnnotation(JsonTypeName.class);
     if (typeName != null) {
       return typeName.value();
-    } else {
-      return type.getRawClass().getSimpleName();
     }
+    return type.getRawClass().getSimpleName();
   }
 
   private TSJsonObjectFormatVisitor useNamedClassOrParse(JavaType javaType) {
@@ -88,10 +87,9 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
       getModule().getNamedTypes().put(visitor.getType().getName(), visitor.getType());
       visitor.addPublicMethods();
       return visitor;
-    } else {
-      type = namedType;
-      return null;
     }
+    type = namedType;
+    return null;
   }
 
   private EnumType parseEnumOrGetFromCache(JavaType javaType) {
@@ -104,9 +102,8 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
       }
       getModule().getNamedTypes().put(name, enumType);
       return enumType;
-    } else {
-      return (EnumType) namedType;
     }
+    return (EnumType) namedType;
   }
 
   @Override
@@ -124,9 +121,8 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
     if (jType.getRawClass().isEnum()) {
       type = parseEnumOrGetFromCache(jType);
       return null;
-    } else {
-      return setTypeAndReturn(new TSJsonStringFormatVisitor(this));
     }
+    return setTypeAndReturn(new TSJsonStringFormatVisitor(this));
   }
 
   @Override
