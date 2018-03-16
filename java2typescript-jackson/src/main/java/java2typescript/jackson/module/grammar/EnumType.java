@@ -22,25 +22,26 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.CaseFormat;
 import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 
 public class EnumType extends AbstractNamedType {
 
   private List<String> values = new ArrayList<String>();
 
-  public EnumType(String className) {
-    super(className);
+  public EnumType(String[] packagePath, String className) {
+    super(packagePath, className);
   }
 
   @Override
   public void writeDef(Writer writer) throws IOException {
-    writer.write(format("interface I%s {\n", name, name));
+    writer.write(format("export interface %s {\n", getDefName()));
     for (String value : values) {
       writer.write(format("    %s: string,\n", value));
     }
     writer.write("}\n\n");
 
-    writer.write(format("export const %s: I%s = {\n", name, name));
+    writer.write(format("export const %s: %s = {\n", getName(), getDefName()));
     for (String value : values) {
       writer.write(format("    %s: '%s',\n", value, value));
     }
@@ -49,7 +50,17 @@ public class EnumType extends AbstractNamedType {
 
   @Override
   public void write(Writer writer) throws IOException {
-    writer.write("I" + name);
+    writer.write(getDefName());
+  }
+
+  @Override
+  public String getDefName() {
+    return "I" + getName();
+  }
+
+  @Override
+  public String getFileName() {
+    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, getName()) + ".ts";
   }
 
   public List<String> getValues() {

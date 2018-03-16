@@ -59,7 +59,6 @@ public class DefinitionGenerator {
     for (Class<?> clazz : classes) {
       mapper.acceptJsonFormatVisitor(clazz, visitor);
     }
-
     return module;
   }
 

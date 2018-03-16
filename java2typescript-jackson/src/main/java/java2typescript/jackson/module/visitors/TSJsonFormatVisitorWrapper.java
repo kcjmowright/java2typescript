@@ -94,9 +94,10 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
 
   private EnumType parseEnumOrGetFromCache(JavaType javaType) {
     String name = getName(javaType);
+    String[] packagePath = javaType.getRawClass().getPackage().getName().split("\\.");
     AbstractType namedType = getModule().getNamedTypes().get(name);
     if (namedType == null) {
-      EnumType enumType = new EnumType(name);
+      EnumType enumType = new EnumType(packagePath, name);
       for (Object val : javaType.getRawClass().getEnumConstants()) {
         enumType.getValues().add(val.toString());
       }

@@ -15,18 +15,12 @@ public class AngularRestService extends BaseModel {
 
   private String path;
   private String angularModule;
-  private String baseModule;
   private ClassType classDef;
 
-  public AngularRestService(){
-    super();
-  }
-
-  public AngularRestService(String name, String path, String angularModule, String baseModule) {
-    super(name);
+  public AngularRestService(String[] packagePath, String name, String path, String angularModule) {
+    super(packagePath, name);
     this.path = path;
     this.angularModule = angularModule;
-    this.baseModule = baseModule;
   }
 
   private final Map<String, RestMethod> methods = new HashMap<String, RestMethod>();
@@ -45,14 +39,6 @@ public class AngularRestService extends BaseModel {
 
   public void setAngularModule(String angularModule) {
     this.angularModule = angularModule;
-  }
-
-  public String getBaseModule() {
-    return baseModule;
-  }
-
-  public void setBaseModule(String baseModule) {
-    this.baseModule = baseModule;
   }
 
   public ClassType getClassDef() {

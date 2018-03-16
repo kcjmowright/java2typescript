@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-
 package java2typescript.jaxrs;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -121,25 +120,21 @@ public class ServiceDescriptorGenerator {
    *
    * @param classes
    * @param angularModule
-   * @param baseModuleName
    * @return
    */
-  private Collection<AngularRestService> generateRestServices(Collection<? extends Class<?>> classes, AngularModule angularModule,
-      String baseModuleName) {
+  private Collection<AngularRestService> generateRestServices(Collection<? extends Class<?>> classes, AngularModule angularModule) {
 
-    List<AngularRestService> services = new ArrayList<AngularRestService>();
+    List<AngularRestService> services = new ArrayList<>();
     for (Class<?> clazz : classes) {
-      AngularRestService service = new AngularRestService();
-      service.setName(clazz.getSimpleName());
-      service.setAngularModule(angularModule.getName());
-      service.setBaseModule(baseModuleName);
-
+      String[] packagePath = clazz.getPackage().getName().split("\\.");
       Path pathAnnotation = clazz.getAnnotation(Path.class);
       String pathValue = "";
       if (pathAnnotation != null) {
         pathValue = pathAnnotation.value();
       }
-      service.setPath(pathValue);
+      AngularRestService service =
+          new AngularRestService(packagePath, clazz.getSimpleName(), pathValue, angularModule.getName());
+
       for (Method method : clazz.getDeclaredMethods()) {
         if (Modifier.isPublic(method.getModifiers())) {
           RestMethod restMethod = generateMethod(method);
@@ -154,29 +149,28 @@ public class ServiceDescriptorGenerator {
   }
 
   /**
-   *  @param baseModuleName base module name
+   *  @param angularModuleName angular module name
    * @param context the context url
    */
-  public Module generateTypeScript(String baseModuleName, String context) throws JsonMappingException {
+  public Module generateTypeScript(String angularModuleName, String context) throws JsonMappingException {
     DefinitionGenerator defGen = new DefinitionGenerator(mapper);
-    Module module = defGen.generateTypeScript(baseModuleName, classes);
-    String angularModuleName = baseModuleName;
-
-    angularModuleName = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, angularModuleName);
-
+    Module module = defGen.generateTypeScript(angularModuleName, classes);
     AngularModule angularModule = new AngularModule(angularModuleName);
+
     module.getVars().put(angularModuleName, angularModule);
 
-    module.getVars().put("context", new ContextUrl(context));
+    ContextUrl contextUrl = new ContextUrl(context);
+    module.getNamedTypes().put(contextUrl.getName(), contextUrl);
 
-    Collection<AngularRestService> restServices = generateRestServices(classes, angularModule, baseModuleName);
+    Collection<AngularRestService> restServices = generateRestServices(classes, angularModule);
     for (AngularRestService restService : restServices) {
       AbstractNamedType abstractNamedType = module.getNamedTypes().get(restService.getName());
       if (abstractNamedType instanceof ClassType) {
         ClassType classDef = (ClassType) abstractNamedType;
         decorateParamNames(restService, classDef);
         restService.setClassDef(classDef);
-        module.getVars().put(restService.getName(), restService);
+        module.getNamedTypes().put(restService.getName(), restService);
+        module.getNamedTypes().put(classDef.getDefName(), classDef);
       }
     }
 
@@ -205,7 +199,6 @@ public class ServiceDescriptorGenerator {
       restMethod.setHttpMethod(HttpMethod.DELETE);
     }
     if (restMethod.getHttpMethod() == null) {
-      // throw new RuntimeException("No Http method defined for method : " + method.getName());
       return null;
     }
     restMethod.setParams(generateParams(method));

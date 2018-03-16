@@ -28,8 +28,6 @@ import java.beans.PropertyDescriptor;
 import java.beans.Transient;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashSet;
 
 import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JavaType;
@@ -57,17 +55,12 @@ import java2typescript.jackson.module.grammar.base.AbstractType;
 
 public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassType> implements JsonObjectFormatVisitor {
 
-//  private static final HashSet<String> ignorableTypes = new HashSet<>(Arrays.asList(
-//      "MediaType",
-//      "DataFlavor",
-//      "Attachment",
-//      "MultipartBody"
-//  ));
   private Class clazz;
 
   public TSJsonObjectFormatVisitor(ABaseTSJsonFormatVisitor<?> parentHolder, String className, Class clazz) {
     super(parentHolder);
-    type = new ClassType(className);
+    String[] packagePath = clazz.getPackage().getName().split("\\.");
+    type = new ClassType(packagePath, className);
     this.clazz = clazz;
   }
 

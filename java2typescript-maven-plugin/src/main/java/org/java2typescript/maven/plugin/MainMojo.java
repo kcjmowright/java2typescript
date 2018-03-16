@@ -64,12 +64,6 @@ public class MainMojo extends AbstractMojo {
   private String moduleName;
 
   /**
-   * Name of output submodule
-   */
-  @Parameter(alias = "subModuleName", required = true)
-  private String subModuleName;
-
-  /**
    * The context URL
    */
   @Parameter(alias = "contextUrl", required = true)
@@ -145,7 +139,6 @@ public class MainMojo extends AbstractMojo {
   @SuppressFBWarnings()
   public void execute() throws MojoExecutionException {
 
-    String baseName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, moduleName + "_" + subModuleName);
     List<Class<?>> classes = new ArrayList<>();
     Set<URL> urls = new HashSet<>();
 
@@ -169,31 +162,13 @@ public class MainMojo extends AbstractMojo {
 
       ServiceDescriptorGenerator descGen = new ServiceDescriptorGenerator(classes);
       // To Typescript Interfaces
-      try (Writer writer = createFileAndGetWriter(tsOutPath, baseName + ".ts")) {
-        Module tsModule = descGen.generateTypeScript(moduleName, contextUrl);
-        tsModule.write(writer);
-      }
+
+      Module tsModule = descGen.generateTypeScript(moduleName, contextUrl);
+      tsModule.externalize(tsOutPath);
 
     } catch (Exception e) {
       throw new MojoExecutionException(e.getMessage(), e);
     }
-  }
-
-  /**
-   *
-   * @param folder
-   * @param fileName
-   * @return
-   * @throws IOException
-   */
-  private Writer createFileAndGetWriter(File folder, String fileName) throws IOException {
-    folder.mkdirs();
-    File file = new File(folder, fileName);
-    getLog().info("Create file : " + file.getCanonicalPath());
-    file.createNewFile();
-    FileOutputStream stream = new FileOutputStream(file);
-    OutputStreamWriter writer = new OutputStreamWriter(stream, Charset.forName("UTF-8"));
-    return writer;
   }
 
 }

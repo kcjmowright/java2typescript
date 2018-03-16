@@ -17,19 +17,14 @@
 package java2typescript.jaxrs.model;
 
 import com.google.common.base.CaseFormat;
-import java2typescript.jackson.module.grammar.base.AbstractType;
+import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 
-public abstract class BaseModel extends AbstractType {
+public abstract class BaseModel extends AbstractNamedType {
 
-  protected String name;
   protected String lowerCamelName;
 
-  public BaseModel() {
-
-  }
-
-  public BaseModel(String name) {
-    this.name = name;
+  public BaseModel(String[] packagePath, String name) {
+    super(packagePath, name);
     this.lowerCamelName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name);
   }
 
@@ -38,7 +33,6 @@ public abstract class BaseModel extends AbstractType {
   }
 
   public void setName(String name) {
-    this.name = name;
     this.lowerCamelName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name);
   }
 

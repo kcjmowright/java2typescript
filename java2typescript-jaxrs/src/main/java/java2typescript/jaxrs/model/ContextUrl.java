@@ -16,21 +16,22 @@
 
 package java2typescript.jaxrs.model;
 
-import java2typescript.jackson.module.grammar.base.AbstractType;
+import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 
 import java.io.IOException;
 import java.io.Writer;
 
-public class ContextUrl extends AbstractType {
+public class ContextUrl extends AbstractNamedType {
 
   private String contextUrl = "";
 
   public ContextUrl(String contextUrl) {
+    super(new String[]{ "shared" }, "ContextUrl");
     this.contextUrl = contextUrl == null? "" : contextUrl;
   }
 
   @Override
   public void write(Writer writer) throws IOException {
-    writer.write("    const contextUrl = '" + contextUrl + "';\n");
+    writer.write("export const contextUrl = '" + contextUrl + "';\n");
   }
 }

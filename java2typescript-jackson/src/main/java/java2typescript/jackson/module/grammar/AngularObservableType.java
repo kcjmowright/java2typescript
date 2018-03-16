@@ -39,6 +39,7 @@ public class AngularObservableType extends AbstractType {
     this.type = type;
   }
 
+  @Override
   public void write(Writer writer) throws IOException {
     if (type == null) {
       writer.write("Observable");

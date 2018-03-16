@@ -28,21 +28,31 @@ import java2typescript.jackson.module.grammar.base.AbstractType;
 
 public class ClassType extends AbstractNamedType {
 
-  static private ClassType objectType = new ClassType("Object");
+  static private ClassType OBJECT_TYPE = new ClassType(new String[]{ "" }, "Object");
+
   private Map<String, AbstractType> fields = new LinkedHashMap<String, AbstractType>();
   private Map<String, FunctionType> methods = new LinkedHashMap<String, FunctionType>();
 
-  public ClassType(String className) {
-    super(className);
+  /**
+   *
+   * @param packagePath
+   * @param className
+   */
+  public ClassType(String[] packagePath, String className) {
+    super(packagePath, className);
   }
 
-  static public ClassType getObjectClass() {
-    return objectType;
+  /**
+   *
+   * @return ClassType
+   */
+  public static ClassType getObjectClass() {
+    return OBJECT_TYPE;
   }
 
   @Override
   public void writeDef(Writer writer) throws IOException {
-    writer.write(format("interface I%s {\n", name));
+    writer.write(format("export interface %s {\n", getDefName()));
     for (Entry<String, AbstractType> entry : fields.entrySet()) {
       writer.write(format("    %s?: ", entry.getKey()));
       entry.getValue().write(writer);
@@ -68,7 +78,13 @@ public class ClassType extends AbstractNamedType {
     return methods;
   }
 
-  @Override public void write(Writer writer) throws IOException {
-    writer.write("I" + getName());
+  @Override
+  public void write(Writer writer) throws IOException {
+    writer.write(getDefName());
+  }
+
+  @Override
+  public String getDefName() {
+    return "I" + getName();
   }
 }
