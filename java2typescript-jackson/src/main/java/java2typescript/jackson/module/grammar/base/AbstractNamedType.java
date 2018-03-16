@@ -46,12 +46,17 @@ abstract public class AbstractNamedType extends AbstractType {
     return name;
   }
 
+  public String getSimpleName() {
+    String[] names = name.split("\\.");
+    return names[names.length - 1];
+  }
+
   public String getFileName() {
     return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, getDefName()) + ".ts";
   }
 
   public String getDefName() {
-    return name;
+    return getSimpleName();
   }
 
   public String[] getPackagePath() {
@@ -60,6 +65,10 @@ abstract public class AbstractNamedType extends AbstractType {
 
   public void setPackagePath(String[] packagePath) {
     this.packagePath = packagePath;
+  }
+
+  public String getFullyQualifiedName() {
+    return String.join(".", getPackagePath()) + "." + getDefName();
   }
 
   /**

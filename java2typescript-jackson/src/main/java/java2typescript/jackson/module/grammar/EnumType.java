@@ -41,7 +41,7 @@ public class EnumType extends AbstractNamedType {
     }
     writer.write("}\n\n");
 
-    writer.write(format("export const %s: %s = {\n", getName(), getDefName()));
+    writer.write(format("export const %s: %s = {\n", getSimpleName(), getDefName()));
     for (String value : values) {
       writer.write(format("    %s: '%s',\n", value, value));
     }
@@ -55,12 +55,12 @@ public class EnumType extends AbstractNamedType {
 
   @Override
   public String getDefName() {
-    return "I" + getName();
+    return "I" + getSimpleName();
   }
 
   @Override
   public String getFileName() {
-    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, getName()) + ".ts";
+    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, getSimpleName()) + ".ts";
   }
 
   public List<String> getValues() {

@@ -85,6 +85,6 @@ public class ClassType extends AbstractNamedType {
 
   @Override
   public String getDefName() {
-    return "I" + getName();
+    return "I" + getSimpleName();
   }
 }

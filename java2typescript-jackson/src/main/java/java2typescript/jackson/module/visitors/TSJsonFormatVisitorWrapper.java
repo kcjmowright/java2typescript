@@ -72,7 +72,7 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
     if (typeName != null) {
       return typeName.value();
     }
-    return type.getRawClass().getSimpleName();
+    return type.getRawClass().getCanonicalName();
   }
 
   private TSJsonObjectFormatVisitor useNamedClassOrParse(JavaType javaType) {
