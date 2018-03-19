@@ -123,7 +123,6 @@ public class ServiceDescriptorGenerator {
    * @return
    */
   private Collection<AngularRestService> generateRestServices(Collection<? extends Class<?>> classes, AngularModule angularModule) {
-
     List<AngularRestService> services = new ArrayList<>();
     for (Class<?> clazz : classes) {
       String[] packagePath = clazz.getPackage().getName().split("\\.");
@@ -139,7 +138,7 @@ public class ServiceDescriptorGenerator {
         if (Modifier.isPublic(method.getModifiers())) {
           RestMethod restMethod = generateMethod(method);
           if(restMethod != null) {
-            service.getMethods().put(restMethod.getName(), restMethod);
+            service.getRestMethods().put(restMethod.getName(), restMethod);
           }
         }
       }
@@ -173,7 +172,6 @@ public class ServiceDescriptorGenerator {
         module.getNamedTypes().put(classDef.getFullyQualifiedName(), classDef);
       }
     }
-
     return module;
   }
 
@@ -286,7 +284,7 @@ public class ServiceDescriptorGenerator {
   private void decorateParamNames(AngularRestService module, ClassType classDef) {
 
     // Loop on methods of the service
-    for (RestMethod restMethod : module.getMethods().values()) {
+    for (RestMethod restMethod : module.getRestMethods().values()) {
       FunctionType function = classDef.getMethods().get(restMethod.getName());
 
       if (function == null) {

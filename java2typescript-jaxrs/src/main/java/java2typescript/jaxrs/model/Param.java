@@ -17,8 +17,11 @@
 package java2typescript.jaxrs.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java2typescript.jackson.module.grammar.base.AbstractType;
 
-public class Param {
+import java.io.Writer;
+
+public class Param extends AbstractType {
   private String name;
   private ParamType type;
   private boolean context = false;
@@ -46,5 +49,10 @@ public class Param {
 
   public void setContext(boolean context) {
     this.context = context;
+  }
+
+  @Override
+  public void write(Writer writer) {
+
   }
 }

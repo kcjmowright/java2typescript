@@ -1,11 +1,14 @@
 package java2typescript.jaxrs.model;
 
+import java2typescript.jackson.module.grammar.AngularObservableType;
 import java2typescript.jackson.module.grammar.ClassType;
 import java2typescript.jackson.module.grammar.FunctionType;
 import java2typescript.jackson.module.grammar.VoidType;
+import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,7 +26,7 @@ public class AngularRestService extends BaseModel {
     this.angularModule = angularModule;
   }
 
-  private final Map<String, RestMethod> methods = new HashMap<String, RestMethod>();
+  private final Map<String, RestMethod> methods = new HashMap<>();
 
   public String getPath() {
     return path;
@@ -49,12 +52,20 @@ public class AngularRestService extends BaseModel {
     this.classDef = classDef;
   }
 
-  public Map<String, RestMethod> getMethods() {
+  public Map<String, RestMethod> getRestMethods() {
     return methods;
   }
 
+//  @Override
+//  public Map<String, FunctionType> getMethods() {
+//    return new LinkedHashMap<>(methods);
+//  }
+
   public String getContextUrlPath() {
-    return "@" + getAngularModule() + "/context-url";
+    StringBuilder sb = new StringBuilder();
+    Arrays.stream(this.packagePath).forEach(p -> sb.append("../"));
+    sb.append("shared/context-url");
+    return sb.toString();
   }
 
   @Override
@@ -63,10 +74,11 @@ public class AngularRestService extends BaseModel {
     writer.write("import { HttpClient } from '@angular/common/http';\n");
     writer.write("import { Observable } from 'rxjs/Observable'\n\n");
 
-    // @todo Import DTOs
+    for(Map.Entry<AbstractNamedType, String> entry: getClassDef().resolveImports().entrySet()) {
+      writer.write("import { " + entry.getKey().getDefName() + " } from '" + entry.getValue() + "';\n");
+    }
 
-    // @todo Import context URL?
-    writer.write("import {contextUrl} from '" + getContextUrlPath() + "'; // @todo Fix me!\n\n");
+    writer.write("import { contextUrl } from '" + getContextUrlPath() + "';\n\n");
 
     writer.write("@Injectable()\n");
     writer.write(format("export class %s implements %s {\n", getName(), "I" + getName()));
@@ -77,11 +89,9 @@ public class AngularRestService extends BaseModel {
       baseUrlPath = "";
     }
 
-    writer.write(format("  private baseUrl: string = `${contextUrl}%s`;\n\n", baseUrlPath));
-
     writer.write("  constructor(private http: HttpClient) {}\n\n");
 
-    for (Map.Entry<String, RestMethod> entry : getMethods().entrySet()) {
+    for (Map.Entry<String, RestMethod> entry : getRestMethods().entrySet()) {
       String methodName = entry.getKey();
       RestMethod restMethod = entry.getValue();
       FunctionType functionType = getClassDef().getMethods().get(methodName);
@@ -101,7 +111,7 @@ public class AngularRestService extends BaseModel {
       }
 
       // URL Template
-      writer.write(format("    let urlTmpl = `${this.baseUrl}%s`;\n", path));
+      writer.write(format("    let urlTmpl: string = `${contextUrl}%s%s`;\n", baseUrlPath, path));
 
       // Path Params
       writer.write("    let pathParams = {\n");
@@ -146,12 +156,16 @@ public class AngularRestService extends BaseModel {
       writer.write("\n");
 
       if (restMethod.getHttpMethod() == HttpMethod.GET) {
-        writer.write("    return this.http.get(urlTmpl, {\n"); // @todo change to get<T> to return observable of type T
+        writer.write("    return this.http.get<");
+        ((AngularObservableType)functionType.getResultType()).getType().write(writer);
+        writer.write(">(urlTmpl, {\n");
         writer.write("      params: params,\n");
         writer.write("      responseType: 'json'\n");
         writer.write("    });\n");
       } else if (restMethod.getHttpMethod() == HttpMethod.POST) {
-        writer.write("    return this.http.post(urlTmpl, {\n"); // @todo change to get<T> to return observable of type T
+        writer.write("    return this.http.post<");
+        ((AngularObservableType)functionType.getResultType()).getType().write(writer);
+        writer.write(">(urlTmpl, {\n");
         for (Param param: restMethod.getParams()) {
           if (param.getType() == ParamType.BODY){
             writer.write(format("      data: %s,\n", param.getName() ));
@@ -164,7 +178,9 @@ public class AngularRestService extends BaseModel {
         }
         writer.write("    });\n");
       } else if (restMethod.getHttpMethod() == HttpMethod.PUT) {
-        writer.write("    return this.http.put(urlTmpl, {\n"); // @todo change to get<T> to return observable of type T
+        writer.write("    return this.http.put<");
+        ((AngularObservableType)functionType.getResultType()).getType().write(writer);
+        writer.write(">(urlTmpl, {\n");
         for (Param param: restMethod.getParams()) {
           if (param.getType() == ParamType.BODY){
             writer.write(format("      data: %s,\n", param.getName() ));
@@ -177,7 +193,7 @@ public class AngularRestService extends BaseModel {
         writer.write("      params: params\n");
         writer.write("    });\n");
       } else if (restMethod.getHttpMethod() == HttpMethod.DELETE) {
-        writer.write("    return this.http.delete(urlTmpl, {\n"); // @todo change to get<T> to return observable of type T
+        writer.write("    return this.http.delete(urlTmpl, {\n");
         writer.write("      params: params,\n");
         writer.write("      responseType: 'json'\n");
         writer.write("    });\n");

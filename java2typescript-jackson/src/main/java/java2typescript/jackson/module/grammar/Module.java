@@ -62,7 +62,7 @@ public class Module extends AbstractNamedType {
     writer.write("\n");
 
     for (AbstractNamedType type : namedTypes.values()) {
-      writer.write("export {" + type.getName() + "} from './" + String.join(File.separator, type.getPackagePath()) + "';\n");
+      writer.write("export { " + type.getDefName() + " } from './" + String.join(File.separator, type.getPackagePath()) + "';\n");
     }
     writer.write("\n");
 

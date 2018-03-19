@@ -27,7 +27,7 @@ import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 
 public class EnumType extends AbstractNamedType {
 
-  private List<String> values = new ArrayList<String>();
+  private List<String> values = new ArrayList<>();
 
   public EnumType(String[] packagePath, String className) {
     super(packagePath, className);

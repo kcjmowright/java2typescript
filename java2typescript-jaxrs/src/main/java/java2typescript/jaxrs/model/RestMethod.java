@@ -17,11 +17,12 @@
 package java2typescript.jaxrs.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java2typescript.jackson.module.grammar.FunctionType;
 
 import java.util.List;
 import java.util.Map;
 
-public class RestMethod {
+public class RestMethod extends FunctionType {
 
   private String name;
   private String path;
