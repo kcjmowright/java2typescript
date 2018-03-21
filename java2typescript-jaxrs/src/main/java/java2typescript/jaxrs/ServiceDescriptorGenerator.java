@@ -16,30 +16,6 @@
  ******************************************************************************/
 package java2typescript.jaxrs;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import java2typescript.jackson.module.DefinitionGenerator;
-import java2typescript.jackson.module.grammar.AnyType;
-import java2typescript.jaxrs.model.AngularModule;
-import java2typescript.jaxrs.model.AngularRestService;
-import java2typescript.jaxrs.model.ContextUrl;
-import java2typescript.jaxrs.model.HttpMethod;
-import java2typescript.jaxrs.model.Param;
-import java2typescript.jaxrs.model.RestMethod;
-import com.google.common.base.CaseFormat;
-import java2typescript.jackson.module.grammar.AngularObservableType;
-import java2typescript.jackson.module.grammar.ClassType;
-import java2typescript.jackson.module.grammar.FunctionType;
-import java2typescript.jackson.module.grammar.Module;
-import java2typescript.jackson.module.grammar.VoidType;
-import java2typescript.jackson.module.grammar.base.AbstractNamedType;
-import java2typescript.jackson.module.grammar.base.AbstractType;
-
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
@@ -68,6 +44,31 @@ import static java2typescript.jaxrs.model.ParamType.BODY;
 import static java2typescript.jaxrs.model.ParamType.FORM;
 import static java2typescript.jaxrs.model.ParamType.PATH;
 import static java2typescript.jaxrs.model.ParamType.QUERY;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+
+import com.google.common.base.CaseFormat;
+
+import java2typescript.jackson.module.DefinitionGenerator;
+import java2typescript.jackson.module.grammar.AnyType;
+import java2typescript.jaxrs.model.AngularRestService;
+import java2typescript.jaxrs.model.ContextUrl;
+import java2typescript.jaxrs.model.HttpMethod;
+import java2typescript.jaxrs.model.Param;
+import java2typescript.jaxrs.model.RestMethod;
+import java2typescript.jackson.module.grammar.AngularObservableType;
+import java2typescript.jackson.module.grammar.ClassType;
+import java2typescript.jackson.module.grammar.FunctionType;
+import java2typescript.jackson.module.grammar.Module;
+import java2typescript.jackson.module.grammar.VoidType;
+import java2typescript.jackson.module.grammar.base.AbstractNamedType;
+import java2typescript.jackson.module.grammar.base.AbstractType;
 
 /**
  * Generates a {@link AngularRestService} description out of a service class /
@@ -119,10 +120,9 @@ public class ServiceDescriptorGenerator {
   /**
    *
    * @param classes
-   * @param angularModule
    * @return
    */
-  private Collection<AngularRestService> generateRestServices(Collection<? extends Class<?>> classes, AngularModule angularModule) {
+  private Collection<AngularRestService> generateRestServices(Collection<? extends Class<?>> classes) {
     List<AngularRestService> services = new ArrayList<>();
     for (Class<?> clazz : classes) {
       String[] packagePath = clazz.getPackage().getName().split("\\.");
@@ -132,7 +132,7 @@ public class ServiceDescriptorGenerator {
         pathValue = pathAnnotation.value();
       }
       AngularRestService service =
-          new AngularRestService(packagePath, clazz.getSimpleName(), pathValue, angularModule.getName());
+          new AngularRestService(packagePath, clazz.getSimpleName(), pathValue);
 
       for (Method method : clazz.getDeclaredMethods()) {
         if (Modifier.isPublic(method.getModifiers())) {
@@ -154,14 +154,11 @@ public class ServiceDescriptorGenerator {
   public Module generateTypeScript(String angularModuleName, String context) throws JsonMappingException {
     DefinitionGenerator defGen = new DefinitionGenerator(mapper);
     Module module = defGen.generateTypeScript(angularModuleName, classes);
-    AngularModule angularModule = new AngularModule(angularModuleName);
-
-    module.getVars().put(angularModuleName, angularModule);
 
     ContextUrl contextUrl = new ContextUrl(context);
     module.getNamedTypes().put(contextUrl.getName(), contextUrl);
 
-    Collection<AngularRestService> restServices = generateRestServices(classes, angularModule);
+    Collection<AngularRestService> restServices = generateRestServices(classes);
     for (AngularRestService restService : restServices) {
       AbstractNamedType abstractNamedType = module.getNamedTypes().get(restService.getFullyQualifiedName());
       if (abstractNamedType instanceof ClassType) {

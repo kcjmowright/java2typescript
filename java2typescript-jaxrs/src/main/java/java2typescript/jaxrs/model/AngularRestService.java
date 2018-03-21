@@ -17,13 +17,11 @@ import static java.lang.String.format;
 public class AngularRestService extends BaseModel {
 
   private String path;
-  private String angularModule;
   private ClassType classDef;
 
-  public AngularRestService(String[] packagePath, String name, String path, String angularModule) {
+  public AngularRestService(String[] packagePath, String name, String path) {
     super(packagePath, name);
     this.path = path;
-    this.angularModule = angularModule;
   }
 
   private final Map<String, RestMethod> methods = new HashMap<>();
@@ -34,14 +32,6 @@ public class AngularRestService extends BaseModel {
 
   public void setPath(String path) {
     this.path = path;
-  }
-
-  public String getAngularModule() {
-    return angularModule;
-  }
-
-  public void setAngularModule(String angularModule) {
-    this.angularModule = angularModule;
   }
 
   public ClassType getClassDef() {
@@ -55,11 +45,6 @@ public class AngularRestService extends BaseModel {
   public Map<String, RestMethod> getRestMethods() {
     return methods;
   }
-
-//  @Override
-//  public Map<String, FunctionType> getMethods() {
-//    return new LinkedHashMap<>(methods);
-//  }
 
   public String getContextUrlPath() {
     StringBuilder sb = new StringBuilder();

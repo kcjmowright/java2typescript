@@ -39,7 +39,6 @@ public class Module extends AbstractNamedType {
   }
 
   public void externalize(File baseFile) throws IOException {
-
     for (Module module : modules.values()) {
       module.externalize(baseFile);
     }
