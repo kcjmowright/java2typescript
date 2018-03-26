@@ -53,7 +53,7 @@ public class DefinitionGenerator {
 
     mapper.setDateFormat(new SimpleDateFormat(DATE_FORMAT));
 
-    Module module = new Module(baseModuleName);
+    Module module = new Module();
     TSJsonFormatVisitorWrapper visitor = new TSJsonFormatVisitorWrapper(module);
 
     for (Class<?> clazz : classes) {

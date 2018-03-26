@@ -18,8 +18,16 @@ public class Module extends AbstractNamedType {
 
   private Map<String, AbstractType> vars = new LinkedHashMap<>();
 
+  public Module(String[] packagePath, String name) {
+    super(packagePath, name);
+  }
+
   public Module(String name) {
-    super(new String[] { "" }, name);
+    super(name == null ? new String[]{} : name.split("\\."), name);
+  }
+
+  public Module() {
+    this(null);
   }
 
   public Map<String, AbstractNamedType> getNamedTypes() {
@@ -47,7 +55,7 @@ public class Module extends AbstractNamedType {
       type.externalize(baseFile);
     }
 
-    File path = new File(baseFile, String.join(File.pathSeparator, packagePath));
+    File path = new File(baseFile, String.join(File.separator, packagePath));
     try (Writer writer = getWriter(path, "index.ts")) {
       writeDef(writer);
       writer.flush();
@@ -55,21 +63,27 @@ public class Module extends AbstractNamedType {
   }
 
   public void writeDef(Writer writer) throws IOException {
-    for (Module module : modules.values()) {
-      writer.write("export * from '" + String.join(File.separator, module.getPackagePath()) + "';\n");
-    }
-    writer.write("\n");
-
-    for (AbstractNamedType type : namedTypes.values()) {
-      writer.write("export { " + type.getDefName() + " } from './" + String.join(File.separator, type.getPackagePath()) + "';\n");
-    }
-    writer.write("\n");
-
-    for (AbstractType type : getVars().values()) {
-      type.write(writer);
+    if (getModules().values().size() > 0) {
+      for (Module module : getModules().values()) {
+        writer.write("export * from './" + String.join(File.separator, module.getPackagePath()) + "';\n");
+      }
       writer.write("\n");
     }
-    writer.write("\n");
+
+    if (getNamedTypes().values().size() > 0) {
+      for (AbstractNamedType type : getNamedTypes().values()) {
+        writer.write("export { " + type.getDefName() + " } from './" + type.getFileName() + "';\n");
+      }
+      writer.write("\n");
+    }
+
+    if (getVars().values().size() > 0) {
+      for (AbstractType type : getVars().values()) {
+        type.write(writer);
+        writer.write("\n");
+      }
+      writer.write("\n");
+    }
   }
 
 }

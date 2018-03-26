@@ -62,11 +62,19 @@ public abstract class ABaseTSJsonFormatVisitor<T extends AbstractType> implement
     }
   }
 
-  public Module getModule() {
+  public Module getModule(String moduleName) {
     if (parentHolder == null || parentHolder == this) {
-      return module;
+      if (moduleName == null || moduleName.equalsIgnoreCase(module.getName())) {
+        return module;
+      }
+      Module newModule = module.getModules().get(moduleName);
+      if (newModule == null) {
+        newModule = new Module(moduleName);
+        module.getModules().put(moduleName, newModule);
+      }
+      return newModule;
     }
-    return parentHolder.getModule();
+    return parentHolder.getModule(moduleName);
   }
 
   public Map<JavaType, AbstractType> getComputedTypes() {

@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
-
-import com.google.common.base.CaseFormat;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 abstract public class AbstractNamedType extends AbstractType {
+
+  private static final Pattern pattern = Pattern.compile("[A-Z]{2,}+|[A-Z]");
 
   protected final String name;
 
@@ -52,7 +54,29 @@ abstract public class AbstractNamedType extends AbstractType {
   }
 
   public String getFileName() {
-    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, getDefName()) + ".ts";
+    String text = getDefName();
+    Matcher matcher = pattern.matcher(text);
+    StringBuilder sb = new StringBuilder();
+    int lastIndex = 0;
+    while (matcher.find()) {
+      if (lastIndex > 0) {
+        sb.append("-");
+      }
+      if (lastIndex < matcher.start()) {
+        sb.append(text.substring(lastIndex, matcher.start()).toLowerCase());
+        lastIndex = matcher.start();
+      } else {
+        sb.append(text.substring(matcher.start(), matcher.end() - 1).toLowerCase());
+        lastIndex = matcher.end() - 1;
+      }
+    }
+    if (lastIndex + 1 < text.length()) {
+      if (lastIndex > 0) {
+        sb.append("-");
+      }
+      sb.append(text.substring(lastIndex).toLowerCase());
+    }
+    return sb.append(".ts").toString();
   }
 
   public String getDefName() {

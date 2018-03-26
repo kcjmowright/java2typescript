@@ -67,24 +67,23 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
   }
 
   /** Either Java simple name or @JsonTypeName annotation */
-  private String getName(JavaType type) {
+  private String[] getNames(JavaType type) {
     JsonTypeName typeName = type.getRawClass().getAnnotation(JsonTypeName.class);
     if (typeName != null) {
-      return typeName.value();
+      return new String[] { null, typeName.value() };
     }
-    return type.getRawClass().getCanonicalName();
+    Class clazz = type.getRawClass();
+    return new String[]{ clazz.getPackage().getName(), clazz.getCanonicalName() };
   }
 
   private TSJsonObjectFormatVisitor useNamedClassOrParse(JavaType javaType) {
-
-    String name = getName(javaType);
-
-    AbstractNamedType namedType = getModule().getNamedTypes().get(name);
+    String[] names = getNames(javaType);
+    AbstractNamedType namedType = getModule(names[0]).getNamedTypes().get(names[1]);
 
     if (namedType == null) {
-      TSJsonObjectFormatVisitor visitor = new TSJsonObjectFormatVisitor(this, name, javaType.getRawClass());
+      TSJsonObjectFormatVisitor visitor = new TSJsonObjectFormatVisitor(this, names[1], javaType.getRawClass());
       type = visitor.getType();
-      getModule().getNamedTypes().put(visitor.getType().getName(), visitor.getType());
+      getModule(names[0]).getNamedTypes().put(visitor.getType().getName(), visitor.getType());
       visitor.addPublicMethods();
       return visitor;
     }
@@ -93,15 +92,15 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
   }
 
   private EnumType parseEnumOrGetFromCache(JavaType javaType) {
-    String name = getName(javaType);
-    String[] packagePath = javaType.getRawClass().getPackage().getName().split("\\.");
-    AbstractType namedType = getModule().getNamedTypes().get(name);
+    String[] names = getNames(javaType);
+    String[] packagePath = names[0].split("\\.");
+    AbstractType namedType = getModule(names[0]).getNamedTypes().get(names[1]);
     if (namedType == null) {
-      EnumType enumType = new EnumType(packagePath, name);
+      EnumType enumType = new EnumType(packagePath, names[1]);
       for (Object val : javaType.getRawClass().getEnumConstants()) {
         enumType.getValues().add(val.toString());
       }
-      getModule().getNamedTypes().put(name, enumType);
+      getModule(names[0]).getNamedTypes().put(names[1], enumType);
       return enumType;
     }
     return (EnumType) namedType;

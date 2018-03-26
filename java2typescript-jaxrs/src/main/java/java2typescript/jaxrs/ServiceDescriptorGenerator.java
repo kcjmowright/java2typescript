@@ -160,13 +160,17 @@ public class ServiceDescriptorGenerator {
 
     Collection<AngularRestService> restServices = generateRestServices(classes);
     for (AngularRestService restService : restServices) {
-      AbstractNamedType abstractNamedType = module.getNamedTypes().get(restService.getFullyQualifiedName());
+      Module subModule = module.getModules().get(String.join(".", restService.getPackagePath()));
+      if (subModule == null) {
+        subModule = module;
+      }
+      AbstractNamedType abstractNamedType = subModule.getNamedTypes().get(restService.getFullyQualifiedName());
       if (abstractNamedType instanceof ClassType) {
         ClassType classDef = (ClassType) abstractNamedType;
         decorateParamNames(restService, classDef);
         restService.setClassDef(classDef);
-        module.getNamedTypes().put(restService.getFullyQualifiedName(), restService);
-        module.getNamedTypes().put(classDef.getFullyQualifiedName(), classDef);
+        subModule.getNamedTypes().put(restService.getFullyQualifiedName(), restService);
+        subModule.getNamedTypes().put(classDef.getFullyQualifiedName(), classDef);
       }
     }
     return module;
