@@ -232,16 +232,21 @@ public class ServiceDescriptorGenerator {
   }
 
   /**
-   *
+   * Parameters can have more than one annotation.  Storing the `param` under the `parameter` name
+   * which doesn't necessarily match so that we'll lookup the `param` later by the `parameter` name.
+   * Reflection will sometimes return arg0, arg1, etc, while the annotation value is the name we truly want to give it.
    * @param annot
    * @param parameter
    * @param params
    */
   private void fillParam(Annotation annot, Parameter parameter, LinkedHashMap<String, Param> params) {
-    Param param = new Param();
-    param.setName(parameter.getName());
-    param.setType(BODY);
-    params.put(param.getName(), param);
+    Param param = params.get(parameter.getName());
+    if (param == null) {
+      param = new Param();
+      param.setName(parameter.getName());
+      param.setType(BODY);
+      params.put(parameter.getName(), param);
+    }
     if (annot instanceof PathParam) {
       param.setType(PATH);
       param.setName(((PathParam) annot).value());
