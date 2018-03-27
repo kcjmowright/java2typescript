@@ -29,9 +29,7 @@ public class MapType extends AbstractType {
 
   @Override
   public void write(Writer writer) throws IOException {
-    writer.write("{ [key: ");
-    keyType.write(writer);
-    writer.write(" ]: ");
+    writer.write("{ [key: string ]: ");
     valueType.write(writer);
     writer.write(";}");
   }

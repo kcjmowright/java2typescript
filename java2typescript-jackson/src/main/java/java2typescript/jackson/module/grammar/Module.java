@@ -72,7 +72,8 @@ public class Module extends AbstractNamedType {
 
     if (getNamedTypes().values().size() > 0) {
       for (AbstractNamedType type : getNamedTypes().values()) {
-        writer.write("export { " + type.getDefName() + " } from './" + type.getFileName() + "';\n");
+        writer.write("export { " + type.getDefName() +
+            " } from './" + type.getFileName().replaceAll("\\.ts$", "") + "';\n");
       }
       writer.write("\n");
     }

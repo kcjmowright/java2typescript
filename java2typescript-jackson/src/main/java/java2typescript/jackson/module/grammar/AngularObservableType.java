@@ -3,16 +3,18 @@ package java2typescript.jackson.module.grammar;
 import java.io.IOException;
 import java.io.Writer;
 
+import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 import java2typescript.jackson.module.grammar.base.AbstractType;
 
 /**
  *
  */
-public class AngularObservableType extends AbstractType {
+public class AngularObservableType extends AbstractNamedType {
 
   private AbstractType type;
 
   public AngularObservableType(AbstractType type) {
+    super(new String[]{ "rxjs", "Observable" }, "Observable");
     this.type = type;
   }
 

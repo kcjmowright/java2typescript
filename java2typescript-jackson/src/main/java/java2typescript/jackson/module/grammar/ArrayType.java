@@ -40,4 +40,8 @@ public class ArrayType extends AbstractType {
     this.itemType = itemType;
   }
 
+  public AbstractType getItemType() {
+    return this.itemType;
+  }
+
 }

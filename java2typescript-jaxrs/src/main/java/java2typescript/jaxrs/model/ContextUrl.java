@@ -26,7 +26,7 @@ public class ContextUrl extends AbstractNamedType {
   private String contextUrl = "";
 
   public ContextUrl(String contextUrl) {
-    super(new String[]{ "shared" }, "ContextUrl");
+    super(new String[]{ "shared" }, "contextUrl");
     this.contextUrl = contextUrl == null? "" : contextUrl;
   }
 

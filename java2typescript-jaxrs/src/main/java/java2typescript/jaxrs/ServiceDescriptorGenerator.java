@@ -155,8 +155,10 @@ public class ServiceDescriptorGenerator {
     DefinitionGenerator defGen = new DefinitionGenerator(mapper);
     Module module = defGen.generateTypeScript(angularModuleName, classes);
 
+    Module shared = new Module(new String[]{ "shared" }, "shared");
+    module.getModules().put("shared", shared);
     ContextUrl contextUrl = new ContextUrl(context);
-    module.getNamedTypes().put(contextUrl.getName(), contextUrl);
+    shared.getNamedTypes().put(contextUrl.getName(), contextUrl);
 
     Collection<AngularRestService> restServices = generateRestServices(classes);
     for (AngularRestService restService : restServices) {

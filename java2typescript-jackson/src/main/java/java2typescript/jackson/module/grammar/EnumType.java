@@ -22,7 +22,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.base.CaseFormat;
+import java2typescript.jackson.module.Dasherize;
 import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 
 public class EnumType extends AbstractNamedType {
@@ -60,7 +60,7 @@ public class EnumType extends AbstractNamedType {
 
   @Override
   public String getFileName() {
-    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, getSimpleName()) + ".ts";
+    return Dasherize.convert(getSimpleName()) + ".ts";
   }
 
   public List<String> getValues() {
