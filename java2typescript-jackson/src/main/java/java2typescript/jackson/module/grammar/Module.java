@@ -6,6 +6,7 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 import java2typescript.jackson.module.grammar.base.AbstractType;
@@ -17,6 +18,8 @@ public class Module extends AbstractNamedType {
   private Map<String, AbstractNamedType> namedTypes = new HashMap<>();
 
   private Map<String, AbstractType> vars = new LinkedHashMap<>();
+
+  private boolean export = false;
 
   public Module(String[] packagePath, String name) {
     super(packagePath, name);
@@ -46,6 +49,14 @@ public class Module extends AbstractNamedType {
     return name;
   }
 
+  public void setExport(boolean export) {
+    this.export = export;
+  }
+
+  public boolean isExport() {
+    return this.export;
+  }
+
   public void externalize(File baseFile) throws IOException {
     for (Module module : modules.values()) {
       module.externalize(baseFile);
@@ -64,7 +75,7 @@ public class Module extends AbstractNamedType {
 
   public void writeDef(Writer writer) throws IOException {
     if (getModules().values().size() > 0) {
-      for (Module module : getModules().values()) {
+      for (Module module : getModules().values().stream().filter(m -> m.isExport()).collect(Collectors.toList())) {
         writer.write("export * from './" + String.join(File.separator, module.getPackagePath()) + "';\n");
       }
       writer.write("\n");

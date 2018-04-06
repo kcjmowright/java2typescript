@@ -20,6 +20,7 @@ import static java.lang.String.format;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import java2typescript.jackson.module.Dasherize;
@@ -35,32 +36,33 @@ public class EnumType extends AbstractNamedType {
 
   @Override
   public void writeDef(Writer writer) throws IOException {
-    writer.write(format("export interface %s {\n", getDefName()));
-    for (String value : values) {
-      writer.write(format("    %s: string,\n", value));
+    writer.write(format("export type %s = ", getSimpleName()));
+    for (int i = 0; i < values.size(); i++ ) {
+      if ( i != 0) {
+        writer.write(" | ");
+      }
+      writer.write(format("'%s'", values.get(i)));
     }
-    writer.write("}\n\n");
-
-    writer.write(format("export const %s: %s = {\n", getSimpleName(), getDefName()));
+    writer.write(";\n/* tslint:disable:object-literal-sort-keys */\n\n");
+    writer.write(format("export const %s = {\n", getSimpleName()));
     for (String value : values) {
-      writer.write(format("    %s: '%s',\n", value, value));
+      writer.write(format("  %s: '%s' as %s,\n", value, value, getSimpleName()));
     }
-    writer.write("};");
+    writer.write("  values: () => [\n");
+    for (int i = 0; i < values.size(); i++ ) {
+      if ( i != 0) {
+        writer.write(",\n");
+      }
+      writer.write(format("    this.%s", values.get(i)));
+    }
+    writer.write("\n  ]\n");
+    writer.write("};\n");
+    writer.write("/* tslint:enable:object-literal-sort-keys */\n");
   }
 
   @Override
   public void write(Writer writer) throws IOException {
     writer.write(getDefName());
-  }
-
-  @Override
-  public String getDefName() {
-    return "I" + getSimpleName();
-  }
-
-  @Override
-  public String getFileName() {
-    return Dasherize.convert(getSimpleName()) + ".ts";
   }
 
   public List<String> getValues() {

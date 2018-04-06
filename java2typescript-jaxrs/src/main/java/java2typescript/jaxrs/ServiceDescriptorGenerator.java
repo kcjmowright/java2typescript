@@ -156,6 +156,7 @@ public class ServiceDescriptorGenerator {
     Module module = defGen.generateTypeScript(angularModuleName, classes);
 
     Module shared = new Module(new String[]{ "shared" }, "shared");
+    shared.setExport(true);
     module.getModules().put("shared", shared);
     ContextUrl contextUrl = new ContextUrl(context);
     shared.getNamedTypes().put(contextUrl.getName(), contextUrl);
@@ -166,6 +167,7 @@ public class ServiceDescriptorGenerator {
       if (subModule == null) {
         subModule = module;
       }
+      subModule.setExport(true);
       AbstractNamedType abstractNamedType = subModule.getNamedTypes().get(restService.getFullyQualifiedName());
       if (abstractNamedType instanceof ClassType) {
         ClassType classDef = (ClassType) abstractNamedType;
