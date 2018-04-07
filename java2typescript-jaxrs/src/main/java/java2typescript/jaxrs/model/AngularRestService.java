@@ -191,11 +191,11 @@ public class AngularRestService extends BaseModel {
         }
         if (!(functionType.getResultType() instanceof VoidType)) {
           if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
-            writer.write("      responseType: 'json'\n");
+            writer.write("      responseType: 'json',\n");
             //        } else if(restMethod.getProducesContentType().contains("text")){
             //          writer.write("      responseType: 'text'\n");
           } else {
-            writer.write("      responseType: 'blob'\n");
+            writer.write("      responseType: 'blob',\n");
           }
         }
         writer.write("      params: params\n");
