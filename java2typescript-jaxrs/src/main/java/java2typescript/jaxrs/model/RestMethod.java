@@ -29,6 +29,7 @@ public class RestMethod extends FunctionType {
   private List<Param> params;
   private Map<String, Param> pathParams;
   private HttpMethod httpMethod;
+  private String producesContentType = "application/json";
 
   public String getPath() {
     return path;
@@ -63,4 +64,11 @@ public class RestMethod extends FunctionType {
     this.httpMethod = httpMethod;
   }
 
+  public void setProducesContentType(String contentType) {
+    this.producesContentType = contentType;
+  }
+
+  public String getProducesContentType() {
+    return this.producesContentType;
+  }
 }

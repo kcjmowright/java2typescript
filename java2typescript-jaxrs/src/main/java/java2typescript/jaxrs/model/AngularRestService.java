@@ -127,7 +127,7 @@ public class AngularRestService extends BaseModel {
           if (param.getType() == ParamType.BEAN) {
             writer.write(format("    for ( const key in %s ) {\n", param.getName()));
             writer.write("      if (key !== undefined && key !== null) {\n");
-            writer.write(format("      params[key] = %s[key];\n", param.getName()));
+            writer.write(format("        params[key] = %s[key];\n", param.getName()));
             writer.write("      }\n");
             writer.write("    }\n");
           }
@@ -150,7 +150,13 @@ public class AngularRestService extends BaseModel {
         ((AngularObservableType)functionType.getResultType()).getType().write(writer);
         writer.write(">(urlTmpl, {\n");
         writer.write("      params: params,\n");
-        writer.write("      responseType: 'json'\n");
+        if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
+          writer.write("      responseType: 'json'\n");
+//        } else if(restMethod.getProducesContentType().contains("text")){
+//          writer.write("      responseType: 'text'\n");
+        } else {
+          writer.write("      responseType: 'blob'\n");
+        }
         writer.write("    });\n");
       } else if (restMethod.getHttpMethod() == HttpMethod.POST) {
         writer.write("    return this.http.post<");
@@ -164,7 +170,13 @@ public class AngularRestService extends BaseModel {
         }
         writer.write("      params: params,\n");
         if (!(functionType.getResultType() instanceof VoidType)) {
-          writer.write("      responseType: 'json'\n");
+          if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
+            writer.write("      responseType: 'json'\n");
+            //        } else if(restMethod.getProducesContentType().contains("text")){
+            //          writer.write("      responseType: 'text'\n");
+          } else {
+            writer.write("      responseType: 'blob'\n");
+          }
         }
         writer.write("    });\n");
       } else if (restMethod.getHttpMethod() == HttpMethod.PUT) {
@@ -178,7 +190,13 @@ public class AngularRestService extends BaseModel {
           }
         }
         if (!(functionType.getResultType() instanceof VoidType)) {
-          writer.write("      responseType: 'json',\n");
+          if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
+            writer.write("      responseType: 'json'\n");
+            //        } else if(restMethod.getProducesContentType().contains("text")){
+            //          writer.write("      responseType: 'text'\n");
+          } else {
+            writer.write("      responseType: 'blob'\n");
+          }
         }
         writer.write("      params: params\n");
         writer.write("    });\n");
