@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -82,11 +83,35 @@ public class Module extends AbstractNamedType {
     }
 
     if (getNamedTypes().values().size() > 0) {
+
       for (AbstractNamedType type : getNamedTypes().values()) {
-        writer.write("export { " + type.getDefName() +
+        writer.write("import { " + type.getDefName() +
             " } from './" + type.getFileName().replaceAll("\\.ts$", "") + "';\n");
       }
       writer.write("\n");
+
+      Iterator<AbstractNamedType> namedTypes = getNamedTypes().values().iterator();
+
+      writer.write("export {\n");
+      while (namedTypes.hasNext()) {
+        writer.write("  " + namedTypes.next().getDefName());
+        if (namedTypes.hasNext()) {
+          writer.write(",");
+        }
+        writer.write("\n");
+      }
+      writer.write("};\n\n");
+
+      namedTypes = getNamedTypes().values().stream().filter(ant -> !ant.getFileName().startsWith("i-")).iterator();
+      writer.write("export const " + getName().toUpperCase().replaceAll("\\.", "_") + "_PROVIDERS = [\n");
+      while (namedTypes.hasNext()) {
+        writer.write("  " + namedTypes.next().getDefName());
+        if (namedTypes.hasNext()) {
+          writer.write(",");
+        }
+        writer.write("\n");
+      }
+      writer.write("];\n\n");
     }
 
     if (getVars().values().size() > 0) {

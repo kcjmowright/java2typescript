@@ -2,6 +2,7 @@ package java2typescript.jaxrs.model;
 
 import java2typescript.jackson.module.grammar.AngularObservableType;
 import java2typescript.jackson.module.grammar.ArrayType;
+import java2typescript.jackson.module.grammar.BooleanType;
 import java2typescript.jackson.module.grammar.ClassType;
 import java2typescript.jackson.module.grammar.FunctionType;
 import java2typescript.jackson.module.grammar.VoidType;
@@ -146,15 +147,16 @@ public class AngularRestService extends BaseModel {
       }
       writer.write(format("    const urlTmpl = `${contextUrl}%s%s`;\n\n", baseUrlPath, path));
       if (restMethod.getHttpMethod() == HttpMethod.GET) {
-        writer.write("    return this.http.get<");
-        ((AngularObservableType)functionType.getResultType()).getType().write(writer);
-        writer.write(">(urlTmpl, {\n");
-        writer.write("      params: params,\n");
-        if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
+        if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType()) ||
+            ((AngularObservableType)functionType.getResultType()).getType() instanceof BooleanType) {
+          writer.write("    return this.http.get<");
+          ((AngularObservableType)functionType.getResultType()).getType().write(writer);
+          writer.write(">(urlTmpl, {\n");
+          writer.write("      params: params,\n");
           writer.write("      responseType: 'json'\n");
-//        } else if(restMethod.getProducesContentType().contains("text")){
-//          writer.write("      responseType: 'text'\n");
         } else {
+          writer.write("    return this.http.get(urlTmpl, {\n");
+          writer.write("      params: params,\n");
           writer.write("      responseType: 'blob'\n");
         }
         writer.write("    });\n");
@@ -172,8 +174,6 @@ public class AngularRestService extends BaseModel {
         if (!(functionType.getResultType() instanceof VoidType)) {
           if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
             writer.write("      responseType: 'json'\n");
-            //        } else if(restMethod.getProducesContentType().contains("text")){
-            //          writer.write("      responseType: 'text'\n");
           } else {
             writer.write("      responseType: 'blob'\n");
           }
@@ -192,8 +192,6 @@ public class AngularRestService extends BaseModel {
         if (!(functionType.getResultType() instanceof VoidType)) {
           if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
             writer.write("      responseType: 'json',\n");
-            //        } else if(restMethod.getProducesContentType().contains("text")){
-            //          writer.write("      responseType: 'text'\n");
           } else {
             writer.write("      responseType: 'blob',\n");
           }

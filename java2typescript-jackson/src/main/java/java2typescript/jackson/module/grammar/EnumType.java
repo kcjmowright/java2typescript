@@ -19,16 +19,15 @@ import static java.lang.String.format;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
-import java2typescript.jackson.module.Dasherize;
 import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 
 public class EnumType extends AbstractNamedType {
 
-  private List<String> values = new ArrayList<>();
+  private Set<String> values = new HashSet<>();
 
   public EnumType(String[] packagePath, String className) {
     super(packagePath, className);
@@ -37,23 +36,27 @@ public class EnumType extends AbstractNamedType {
   @Override
   public void writeDef(Writer writer) throws IOException {
     writer.write(format("export type %s = ", getSimpleName()));
-    for (int i = 0; i < values.size(); i++ ) {
-      if ( i != 0) {
+
+    Iterator<String> i = values.iterator();
+    while (i.hasNext()) {
+      writer.write(format("'%s'", i.next()));
+      if (i.hasNext()) {
         writer.write(" | ");
       }
-      writer.write(format("'%s'", values.get(i)));
     }
     writer.write(";\n/* tslint:disable:object-literal-sort-keys */\n\n");
     writer.write(format("export const %s = {\n", getSimpleName()));
     for (String value : values) {
-      writer.write(format("  %s: '%s' as %s,\n", value, value, getSimpleName()));
+      writer.write(format("  '%s': '%s' as %s,\n", value, value, getSimpleName()));
     }
     writer.write("  values: () => [\n");
-    for (int i = 0; i < values.size(); i++ ) {
-      if ( i != 0) {
+
+    i = values.iterator();
+    while (i.hasNext()) {
+      writer.write(format("    this['%s']", i.next()));
+      if (i.hasNext()) {
         writer.write(",\n");
       }
-      writer.write(format("    this.%s", values.get(i)));
     }
     writer.write("\n  ]\n");
     writer.write("};\n");
@@ -65,11 +68,11 @@ public class EnumType extends AbstractNamedType {
     writer.write(getDefName());
   }
 
-  public List<String> getValues() {
+  public Set<String> getValues() {
     return values;
   }
 
-  public void setValues(List<String> values) {
+  public void setValues(Set<String> values) {
     this.values = values;
   }
 
