@@ -22,9 +22,10 @@ public class AngularRestService extends BaseModel {
   private String path;
   private ClassType classDef;
 
-  public AngularRestService(String[] packagePath, String name, String path) {
+  public AngularRestService(String[] packagePath, String name, String path, String prefix) {
     super(packagePath, name);
     this.path = path;
+    this.prefix = prefix;
   }
 
   private final Map<String, RestMethod> methods = new HashMap<>();
@@ -35,6 +36,16 @@ public class AngularRestService extends BaseModel {
 
   public void setPath(String path) {
     this.path = path;
+  }
+
+  @Override
+  public String getDefName() {
+    return getPrefix() + getSimpleName();
+  }
+
+  @Override
+  public String getFullyQualifiedName() {
+    return String.join(".", getPackagePath()) + "." + getSimpleName();
   }
 
   public ClassType getClassDef() {
@@ -52,7 +63,7 @@ public class AngularRestService extends BaseModel {
   public String getContextUrlPath() {
     StringBuilder sb = new StringBuilder();
     Arrays.stream(this.packagePath).forEach(p -> sb.append("../"));
-    sb.append("shared/context-url");
+    sb.append("shared/server-url-context-service");
     return sb.toString();
   }
 
@@ -66,10 +77,10 @@ public class AngularRestService extends BaseModel {
       writer.write("import { " + entry.getKey().getDefName() + " } from '" + entry.getValue() + "';\n");
     }
 
-    writer.write("import { contextUrl } from '" + getContextUrlPath() + "';\n\n");
+    writer.write("import { ServerUrlContextService } from '" + getContextUrlPath() + "';\n\n");
 
-    writer.write("@Injectable()\n");
-    writer.write(format("export class %s implements %s {\n", getName(), getClassDef().getDefName()));
+    writer.write("@Injectable({\n  providedIn: 'root'\n})\n");
+    writer.write(format("export class %s implements %s {\n", getDefName(), getClassDef().getDefName()));
 
     String baseUrlPath = getPath().replace("{","${encodeURIComponent(pathParams.")
         .replace("}",")}").trim();
@@ -145,7 +156,7 @@ public class AngularRestService extends BaseModel {
       if("/".equalsIgnoreCase(path)) {
         path = "";
       }
-      writer.write(format("    const urlTmpl = `${contextUrl}%s%s`;\n\n", baseUrlPath, path));
+      writer.write(format("    const urlTmpl = `${ServerUrlContextService.contextUrl}%s%s`;\n\n", baseUrlPath, path));
       if (restMethod.getHttpMethod() == HttpMethod.GET) {
         if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType()) ||
             ((AngularObservableType)functionType.getResultType()).getType() instanceof BooleanType) {

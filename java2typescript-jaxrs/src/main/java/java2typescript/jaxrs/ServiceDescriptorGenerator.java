@@ -59,7 +59,7 @@ import com.google.common.base.CaseFormat;
 import java2typescript.jackson.module.DefinitionGenerator;
 import java2typescript.jackson.module.grammar.AnyType;
 import java2typescript.jaxrs.model.AngularRestService;
-import java2typescript.jaxrs.model.ContextUrl;
+import java2typescript.jaxrs.model.ServerUrlContextService;
 import java2typescript.jaxrs.model.HttpMethod;
 import java2typescript.jaxrs.model.Param;
 import java2typescript.jaxrs.model.RestMethod;
@@ -101,8 +101,7 @@ public class ServiceDescriptorGenerator {
    */
   private class DummySerializer extends JsonSerializer<Object> {
     @Override
-    public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException,
-        JsonProcessingException {
+    public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
       // No implementation here
     }
   }
@@ -121,9 +120,10 @@ public class ServiceDescriptorGenerator {
   /**
    *
    * @param classes
-   * @return
+   * @param prefix
+   * @return Collection of AngularRestService instances.
    */
-  private Collection<AngularRestService> generateRestServices(Collection<? extends Class<?>> classes) {
+  private Collection<AngularRestService> generateRestServices(Collection<? extends Class<?>> classes, String prefix) {
     List<AngularRestService> services = new ArrayList<>();
     for (Class<?> clazz : classes) {
       String[] packagePath = clazz.getPackage().getName().split("\\.");
@@ -133,7 +133,7 @@ public class ServiceDescriptorGenerator {
         pathValue = pathAnnotation.value();
       }
       AngularRestService service =
-          new AngularRestService(packagePath, clazz.getSimpleName(), pathValue);
+          new AngularRestService(packagePath, clazz.getSimpleName(), pathValue, prefix);
 
       for (Method method : clazz.getDeclaredMethods()) {
         if (Modifier.isPublic(method.getModifiers())) {
@@ -149,20 +149,20 @@ public class ServiceDescriptorGenerator {
   }
 
   /**
-   *  @param angularModuleName angular module name
-   * @param context the context url
+   *  @param prefix prefix for naming resource class implementations.
+   * @param contextUrl the context url
    */
-  public Module generateTypeScript(String angularModuleName, String context) throws JsonMappingException {
+  public Module generateTypeScript(String prefix, String contextUrl) throws JsonMappingException {
     DefinitionGenerator defGen = new DefinitionGenerator(mapper);
-    Module module = defGen.generateTypeScript(angularModuleName, classes);
+    Module module = defGen.generateTypeScript(classes);
 
     Module shared = new Module(new String[]{ "shared" }, "shared");
     shared.setExport(true);
     module.getModules().put("shared", shared);
-    ContextUrl contextUrl = new ContextUrl(context);
-    shared.getNamedTypes().put(contextUrl.getName(), contextUrl);
+    ServerUrlContextService serverUrlContextService = new ServerUrlContextService(contextUrl);
+    shared.getNamedTypes().put(serverUrlContextService.getName(), serverUrlContextService);
 
-    Collection<AngularRestService> restServices = generateRestServices(classes);
+    Collection<AngularRestService> restServices = generateRestServices(classes, prefix);
     for (AngularRestService restService : restServices) {
       Module subModule = module.getModules().get(String.join(".", restService.getPackagePath()));
       if (subModule == null) {
@@ -172,6 +172,7 @@ public class ServiceDescriptorGenerator {
       AbstractNamedType abstractNamedType = subModule.getNamedTypes().get(restService.getFullyQualifiedName());
       if (abstractNamedType instanceof ClassType) {
         ClassType classDef = (ClassType) abstractNamedType;
+        classDef.setPrefix(prefix);
         decorateParamNames(restService, classDef);
         restService.setClassDef(classDef);
         subModule.getNamedTypes().put(restService.getFullyQualifiedName(), restService);
@@ -183,8 +184,7 @@ public class ServiceDescriptorGenerator {
 
   /**
    *
-   * @param method
-   * @return
+   * @param method the Java method
    */
   private RestMethod generateMethod(Method method) {
 
@@ -215,8 +215,7 @@ public class ServiceDescriptorGenerator {
 
   /**
    *
-   * @param method
-   * @return
+   * @param method the Java method.
    */
   private List<Param> generateParams(Method method) {
     LinkedHashMap<String, Param> params = new LinkedHashMap<>();
@@ -274,7 +273,7 @@ public class ServiceDescriptorGenerator {
    *
    * @param parameter
    * @param params
-   * @return
+23   * @return String the instance name.
    */
   private String getInstanceName(Parameter parameter, LinkedHashMap<String, Param> params) {
     String instanceName = parameter.getName();
@@ -305,7 +304,7 @@ public class ServiceDescriptorGenerator {
         continue;
       }
       // Copy ordered list of param types
-      List<AbstractType> types = new ArrayList<AbstractType>();
+      List<AbstractType> types = new ArrayList<>();
       if (function.getParameters() != null && function.getParameters().values() != null) {
         types.addAll(function.getParameters().values());
         function.getParameters().clear();

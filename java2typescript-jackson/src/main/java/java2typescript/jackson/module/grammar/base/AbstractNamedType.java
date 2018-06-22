@@ -13,6 +13,8 @@ abstract public class AbstractNamedType extends AbstractType {
 
   protected final String name;
 
+  protected String prefix = "";
+
   protected String[] packagePath;
 
   public AbstractNamedType(String[] packagePath, String className) {
@@ -69,6 +71,14 @@ abstract public class AbstractNamedType extends AbstractType {
 
   public String getFullyQualifiedName() {
     return String.join(".", getPackagePath()) + "." + getDefName();
+  }
+
+  public String getPrefix() {
+    return prefix;
+  }
+
+  public void setPrefix(String prefix) {
+    this.prefix = prefix;
   }
 
   /**

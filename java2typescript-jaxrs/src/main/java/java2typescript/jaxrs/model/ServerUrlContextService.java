@@ -21,17 +21,17 @@ import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 import java.io.IOException;
 import java.io.Writer;
 
-public class ContextUrl extends AbstractNamedType {
+public class ServerUrlContextService extends AbstractNamedType {
 
   private String contextUrl = "";
 
-  public ContextUrl(String contextUrl) {
-    super(new String[]{ "shared" }, "contextUrl");
+  public ServerUrlContextService(String contextUrl) {
+    super(new String[]{ "shared" }, "ServerUrlContextService");
     this.contextUrl = contextUrl == null? "" : contextUrl;
   }
 
   @Override
   public void write(Writer writer) throws IOException {
-    writer.write("export const contextUrl = '" + contextUrl + "';\n");
+    writer.write("export class ServerUrlContextService {\n  static contextUrl = '" + contextUrl + "';\n}\n");
   }
 }

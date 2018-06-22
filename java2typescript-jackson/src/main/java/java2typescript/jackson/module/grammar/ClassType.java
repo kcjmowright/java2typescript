@@ -100,7 +100,7 @@ public class ClassType extends AbstractNamedType {
 
   @Override
   public String getDefName() {
-    return "I" + getSimpleName();
+    return "I" + getPrefix() + getSimpleName();
   }
 
   public Map<AbstractNamedType, String> resolveImports() {
@@ -168,8 +168,12 @@ public class ClassType extends AbstractNamedType {
     Stack<String> stack = new Stack<>();
     Stack<String> upStack = new Stack<>();
 
-    for (int i = a.size(); --i>= 0;) {
-      if (look && a.get(i).equalsIgnoreCase(b.get(i))) {
+    for (int i = a.size(); --i >= 0;) {
+      if (look &&
+          a.get(i).equalsIgnoreCase(b.get(i)) &&
+          String.join(".", a.subList(0, i).toArray(new String[]{})).equalsIgnoreCase(
+            String.join(".", b.subList(0, i).toArray(new String[]{})))
+      ) {
         break;
       } else if (!a.get(i).equalsIgnoreCase(b.get(i))) {
         look = true;

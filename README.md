@@ -1,9 +1,11 @@
 # Purpose
 
-This **maven** plugin is used to generate a typescript definition and [Angular](https://angular.io) implementation of each of the REST services and 
-corresponding DTO models out of the [JAX-RS](https://jax-rs-spec.java.net/) annotated Java services.  For each Java file, the plugin generates
- a corresponding `.ts` file using the same folder structure the Java uses.  Each `.ts` file is imported into a submodule, `index.ts` file.
-Each submodule is then exported from the main `index.html` file barrel style.
+This **maven** plugin is used to generate typescript definitions and [Angular](https://angular.io) implementations of each of the REST service and 
+corresponding DTO models found for a given project using the [JAX-RS](https://jax-rs-spec.java.net/) annotated Java services.
+For each Java file, the plugin generates a corresponding `.ts` file using the same folder structure the Java uses.
+Each `.ts` file is imported into a submodule, `index.ts` file.  Each submodule is then exported from the main `index.ts` file barrel style.
+
+The code generated targets the Angular 6 API.
 
 # Goals
 
@@ -20,7 +22,7 @@ mvn java2typescript:generate
 | Name               | Default value              | Description                          |
 |-------------------:|:--------------------------:|:-------------------------------------|
 | restServiceBaseDir |  -                         | Class of REST service                |
-| moduleName         |  -                         | Name of output parent module         |
+| prefix             |  -                         | Prefix to add to exported interfaces and REST resource classes.        |
 | contextUrl         |  -                         | The base context URL of the REST API |
 | tsOutPath          | ${project.build.directory} | Path to output folder for ts file    |
 
@@ -39,7 +41,7 @@ Add something like the following to your REST interface module's pom.xml:
                 <configuration>
                     <tsOutPath>${project.build.directory}/generated/typescript</tsOutPath>
                     <restServiceBaseDir>src/main/java/com/my/rest</restServiceBaseDir>
-                    <moduleName>my</moduleName>
+                    <prefix>My</prefix>
                     <contextUrl>/myrest/api</contextUrl>
                 </configuration>
             </plugin>

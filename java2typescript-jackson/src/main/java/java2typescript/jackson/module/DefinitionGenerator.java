@@ -42,13 +42,11 @@ public class DefinitionGenerator {
   }
 
   /**
-   * @param baseModuleName
-   *            optional base Namespace
    * @param classes
    *            Class for which generating definition
    * @throws JsonMappingException
    */
-  public Module generateTypeScript(String baseModuleName, Collection<? extends Class<?>> classes)
+  public Module generateTypeScript(Collection<? extends Class<?>> classes)
       throws JsonMappingException {
 
     mapper.setDateFormat(new SimpleDateFormat(DATE_FORMAT));

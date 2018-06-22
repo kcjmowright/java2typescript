@@ -58,10 +58,10 @@ public class MainMojo extends AbstractMojo {
   private String restServiceBaseDir;
 
   /**
-   * Name of output module
+   * Prefix to use when naming resource class implementations.
    */
-  @Parameter(alias = "moduleName", required = true)
-  private String moduleName;
+  @Parameter(alias = "prefix", required = true)
+  private String prefix;
 
   /**
    * The context URL
@@ -163,7 +163,7 @@ public class MainMojo extends AbstractMojo {
       ServiceDescriptorGenerator descGen = new ServiceDescriptorGenerator(classes);
       // To Typescript Interfaces
 
-      Module tsModule = descGen.generateTypeScript(moduleName, contextUrl);
+      Module tsModule = descGen.generateTypeScript(prefix, contextUrl);
       tsModule.externalize(tsOutPath);
 
     } catch (Exception e) {

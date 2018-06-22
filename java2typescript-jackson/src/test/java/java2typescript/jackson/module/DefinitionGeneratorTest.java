@@ -69,7 +69,7 @@ public class DefinitionGeneratorTest {
     ObjectMapper mapper = new ObjectMapper();
     DefinitionGenerator generator = new DefinitionGenerator(mapper);
     StringWriter out = new StringWriter();
-    Module module = generator.generateTypeScript("fm", newArrayList(TestClass.class, StringClass.class));
+    Module module = generator.generateTypeScript(newArrayList(TestClass.class, StringClass.class));
     module.writeDef(out);
     out.close();
     assertTrue(out.getBuffer().toString().length() > 0);

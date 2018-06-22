@@ -101,17 +101,6 @@ public class Module extends AbstractNamedType {
         writer.write("\n");
       }
       writer.write("};\n\n");
-
-      namedTypes = getNamedTypes().values().stream().filter(ant -> !ant.getFileName().startsWith("i-")).iterator();
-      writer.write("export const " + getName().toUpperCase().replaceAll("\\.", "_") + "_PROVIDERS = [\n");
-      while (namedTypes.hasNext()) {
-        writer.write("  " + namedTypes.next().getDefName());
-        if (namedTypes.hasNext()) {
-          writer.write(",");
-        }
-        writer.write("\n");
-      }
-      writer.write("];\n\n");
     }
 
     if (getVars().values().size() > 0) {
