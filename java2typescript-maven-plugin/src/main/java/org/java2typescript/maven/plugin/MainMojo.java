@@ -71,6 +71,12 @@ public class MainMojo extends AbstractMojo {
 
 
   /**
+   * The context URL
+   */
+  @Parameter(alias = "contextToken", required = true)
+  private String contextToken;
+
+  /**
    * Path to output typescript folder
    */
   @Parameter(alias = "tsOutPath", defaultValue = "${project.build.directory}", required = true)
@@ -161,9 +167,7 @@ public class MainMojo extends AbstractMojo {
       }
 
       ServiceDescriptorGenerator descGen = new ServiceDescriptorGenerator(classes);
-      // To Typescript Interfaces
-
-      Module tsModule = descGen.generateTypeScript(prefix, contextUrl);
+      Module tsModule = descGen.generateTypeScript(prefix, contextUrl, contextToken);
       tsModule.externalize(tsOutPath);
 
     } catch (Exception e) {

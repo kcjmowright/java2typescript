@@ -1,19 +1,3 @@
-/*******************************************************************************
- * Copyright 2013 Raphael Jolivet
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
-
 package java2typescript.jaxrs.model;
 
 import java2typescript.jackson.module.grammar.base.AbstractNamedType;
@@ -22,16 +6,21 @@ import java.io.IOException;
 import java.io.Writer;
 
 public class ServerUrlContextService extends AbstractNamedType {
+  private String contextUrl;
+  private String contextToken;
 
-  private String contextUrl = "";
-
-  public ServerUrlContextService(String contextUrl) {
-    super(new String[]{ "shared" }, "ServerUrlContextService");
-    this.contextUrl = contextUrl == null? "" : contextUrl;
+  public ServerUrlContextService(String[] packagePath, String contextUrl, String contextToken) {
+    super(packagePath, contextToken == null ? "SERVER_URL_CONTEXT" : contextToken);
+    this.contextUrl = contextUrl == null ? "" : contextUrl;
+    this.contextToken = contextToken == null ? "SERVER_URL_CONTEXT" : contextToken;
   }
 
   @Override
   public void write(Writer writer) throws IOException {
-    writer.write("export class ServerUrlContextService {\n  static contextUrl = '" + contextUrl + "';\n}\n");
+    writer.write("import { InjectionToken } from '@angular/core';\n\n");
+    writer.write("export const " + contextToken + " = new InjectionToken<String>('URL Context token', {\n");
+    writer.write("    providedIn: 'root',\n");
+    writer.write("    factory: () => '" + contextUrl + "'\n");
+    writer.write("});\n\n");
   }
 }

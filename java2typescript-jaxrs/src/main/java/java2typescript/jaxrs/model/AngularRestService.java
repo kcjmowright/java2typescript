@@ -1,5 +1,6 @@
 package java2typescript.jaxrs.model;
 
+import java2typescript.jackson.module.PathResolver;
 import java2typescript.jackson.module.grammar.AngularObservableType;
 import java2typescript.jackson.module.grammar.ArrayType;
 import java2typescript.jackson.module.grammar.BooleanType;
@@ -11,7 +12,6 @@ import java2typescript.jackson.module.grammar.base.AbstractType;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,21 +21,24 @@ public class AngularRestService extends BaseModel {
 
   private String path;
   private ClassType classDef;
+  private String contextToken;
+  private ServerUrlContextService serverUrlContextService;
+  private final Map<String, RestMethod> methods = new HashMap<>();
 
-  public AngularRestService(String[] packagePath, String name, String path, String prefix) {
+  public AngularRestService(String[] packagePath, String name, String path, String prefix, String contextToken, ServerUrlContextService serverUrlContextService) {
     super(packagePath, name);
+    this.contextToken = contextToken;
     this.path = path;
     this.prefix = prefix;
+    this.serverUrlContextService = serverUrlContextService;
   }
-
-  private final Map<String, RestMethod> methods = new HashMap<>();
 
   public String getPath() {
     return path;
   }
 
-  public void setPath(String path) {
-    this.path = path;
+  public ServerUrlContextService getServerUrlContextService() {
+    return serverUrlContextService;
   }
 
   @Override
@@ -60,26 +63,24 @@ public class AngularRestService extends BaseModel {
     return methods;
   }
 
-  public String getContextUrlPath() {
-    StringBuilder sb = new StringBuilder();
-    Arrays.stream(this.packagePath).forEach(p -> sb.append("../"));
-    sb.append("shared/server-url-context-service");
-    return sb.toString();
-  }
-
   @Override
   public void write(Writer writer) throws IOException {
+    PathResolver pathResolver = PathResolver.getResolver();
+
+    writer.write("import { Inject } from '@angular/core';\n");
     writer.write("import { Injectable } from '@angular/core';\n");
     writer.write("import { HttpClient } from '@angular/common/http';\n");
+    writer.write("import { " +  serverUrlContextService.getDefName() + " } from '" +
+        pathResolver.resolveImportsPath(getPackagePath(), serverUrlContextService.getPackagePath()) +
+        "/" + serverUrlContextService.getFileName().replaceAll("\\.ts$", "") + "';\n");
     writer.write("import { " + getClassDef().getDefName() + " } from './" +
         getClassDef().getFileName().replaceAll("\\.ts$", "") + "';\n");
+
     for (Map.Entry<AbstractNamedType, String> entry: getClassDef().resolveImports().entrySet()) {
       writer.write("import { " + entry.getKey().getDefName() + " } from '" + entry.getValue() + "';\n");
     }
 
-    writer.write("import { ServerUrlContextService } from '" + getContextUrlPath() + "';\n\n");
-
-    writer.write("@Injectable({\n  providedIn: 'root'\n})\n");
+    writer.write("\n@Injectable({\n  providedIn: 'root'\n})\n");
     writer.write(format("export class %s implements %s {\n", getDefName(), getClassDef().getDefName()));
 
     String baseUrlPath = getPath().replace("{","${encodeURIComponent(pathParams.")
@@ -89,7 +90,9 @@ public class AngularRestService extends BaseModel {
       baseUrlPath = "";
     }
 
-    writer.write("  constructor(private http: HttpClient) {}\n\n");
+    writer.write("  constructor(private http: HttpClient, @Inject(");
+    writer.write(this.contextToken);
+    writer.write(") private context: string) {}\n\n");
 
     for (Map.Entry<String, RestMethod> entry : getRestMethods().entrySet()) {
       String methodName = entry.getKey();
@@ -156,7 +159,7 @@ public class AngularRestService extends BaseModel {
       if("/".equalsIgnoreCase(path)) {
         path = "";
       }
-      writer.write(format("    const urlTmpl = `${ServerUrlContextService.contextUrl}%s%s`;\n\n", baseUrlPath, path));
+      writer.write(format("    const urlTmpl = `${this.context}%s%s`;\n\n", baseUrlPath, path));
       if (restMethod.getHttpMethod() == HttpMethod.GET) {
         if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType()) ||
             ((AngularObservableType)functionType.getResultType()).getType() instanceof BooleanType) {

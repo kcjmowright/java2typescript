@@ -123,17 +123,22 @@ public class ServiceDescriptorGenerator {
    * @param prefix
    * @return Collection of AngularRestService instances.
    */
-  private Collection<AngularRestService> generateRestServices(Collection<? extends Class<?>> classes, String prefix) {
+  private Collection<AngularRestService> generateRestServices(Collection<? extends Class<?>> classes, String prefix, String contextUrl, String contextToken) {
     List<AngularRestService> services = new ArrayList<>();
+    ServerUrlContextService serverUrlContextService = null;
+
     for (Class<?> clazz : classes) {
       String[] packagePath = clazz.getPackage().getName().split("\\.");
+      if (serverUrlContextService == null) {
+        serverUrlContextService = new ServerUrlContextService(packagePath, contextUrl, contextToken);
+      }
       Path pathAnnotation = clazz.getAnnotation(Path.class);
       String pathValue = "";
       if (pathAnnotation != null) {
         pathValue = pathAnnotation.value();
       }
       AngularRestService service =
-          new AngularRestService(packagePath, clazz.getSimpleName(), pathValue, prefix);
+          new AngularRestService(packagePath, clazz.getSimpleName(), pathValue, prefix, contextToken, serverUrlContextService);
 
       for (Method method : clazz.getDeclaredMethods()) {
         if (Modifier.isPublic(method.getModifiers())) {
@@ -151,18 +156,14 @@ public class ServiceDescriptorGenerator {
   /**
    *  @param prefix prefix for naming resource class implementations.
    * @param contextUrl the context url
+   * @param contextToken the name of the Angular contextToken
    */
-  public Module generateTypeScript(String prefix, String contextUrl) throws JsonMappingException {
+  public Module generateTypeScript(String prefix, String contextUrl, String contextToken) throws JsonMappingException {
     DefinitionGenerator defGen = new DefinitionGenerator(mapper);
     Module module = defGen.generateTypeScript(classes);
 
-    Module shared = new Module(new String[]{ "shared" }, "shared");
-    shared.setExport(true);
-    module.getModules().put("shared", shared);
-    ServerUrlContextService serverUrlContextService = new ServerUrlContextService(contextUrl);
-    shared.getNamedTypes().put(serverUrlContextService.getName(), serverUrlContextService);
+    Collection<AngularRestService> restServices = generateRestServices(classes, prefix, contextUrl, contextToken);
 
-    Collection<AngularRestService> restServices = generateRestServices(classes, prefix);
     for (AngularRestService restService : restServices) {
       Module subModule = module.getModules().get(String.join(".", restService.getPackagePath()));
       if (subModule == null) {
@@ -177,6 +178,12 @@ public class ServiceDescriptorGenerator {
         restService.setClassDef(classDef);
         subModule.getNamedTypes().put(restService.getFullyQualifiedName(), restService);
         subModule.getNamedTypes().put(classDef.getFullyQualifiedName(), classDef);
+
+        if (subModule.getNamedTypes().get(restService.getServerUrlContextService().getFullyQualifiedName()) == null
+            && String.join(".", subModule.getPackagePath())
+              .equalsIgnoreCase(String.join(".", restService.getServerUrlContextService().getPackagePath()))) {
+          subModule.getNamedTypes().put(restService.getServerUrlContextService().getFullyQualifiedName(), restService.getServerUrlContextService());
+        }
       }
     }
     return module;
