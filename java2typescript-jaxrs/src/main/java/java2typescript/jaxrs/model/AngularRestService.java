@@ -86,6 +86,9 @@ public class AngularRestService extends BaseModel {
     String baseUrlPath = getPath().replace("{","${encodeURIComponent(pathParams.")
         .replace("}",")}").trim();
 
+    if (!baseUrlPath.startsWith("/")) {
+      baseUrlPath = "/" + baseUrlPath;
+    }
     if ("/".equalsIgnoreCase(baseUrlPath)) {
       baseUrlPath = "";
     }
@@ -156,7 +159,10 @@ public class AngularRestService extends BaseModel {
           .replace("}", ")}")
           .trim();
 
-      if("/".equalsIgnoreCase(path)) {
+      if (!path.startsWith("/")) {
+        path = "/" + path;
+      }
+      if ("/".equalsIgnoreCase(path)) {
         path = "";
       }
       writer.write(format("    const urlTmpl = `${this.context}%s%s`;\n\n", baseUrlPath, path));
