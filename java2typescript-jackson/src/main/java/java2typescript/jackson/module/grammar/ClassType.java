@@ -63,22 +63,34 @@ public class ClassType extends AbstractNamedType {
   public void writeDef(Writer writer) throws IOException {
     Map<AbstractNamedType, String> imports = resolveImports();
     if (imports.size() > 0) {
-      for (Entry<AbstractNamedType, String> entry : imports.entrySet()) {
-        writer.write("import { " + entry.getKey().getDefName() + " } from '" + entry.getValue() + "';\n");
-      }
+      imports.entrySet().stream().sorted(Entry.comparingByKey(Comparator.comparing(AbstractNamedType::getDefName))).forEach(entry -> {
+        try {
+          writer.write("import { " + entry.getKey().getDefName() + " } from '" + entry.getValue() + "';\n");
+        } catch(IOException e) {
+          throw new RuntimeException(e);
+        }
+      });
       writer.write("\n");
     }
     writer.write(format("export interface %s {\n", getDefName()));
-    for (Entry<String, AbstractType> entry : fields.entrySet()) {
-      writer.write(format("  %s?: ", entry.getKey()));
-      entry.getValue().write(writer);
-      writer.write(";\n");
-    }
-    for (String methodName : getMethods().keySet()) {
-      writer.write("  " + methodName);
-      this.methods.get(methodName).writeNonLambda(writer);
-      writer.write(";\n");
-    }
+    fields.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> {
+      try {
+        writer.write(format("  %s?: ", entry.getKey()));
+        entry.getValue().write(writer);
+        writer.write(";\n");
+      } catch(IOException e) {
+        throw new RuntimeException(e);
+      }
+    });
+    getMethods().keySet().stream().sorted().forEach(methodName -> {
+      try {
+        writer.write("  " + methodName);
+        this.methods.get(methodName).writeNonLambda(writer);
+        writer.write(";\n");
+      } catch(IOException e) {
+        throw new RuntimeException(e);
+      }
+    });
     writer.write("}\n");
   }
 

@@ -12,6 +12,7 @@ import java2typescript.jackson.module.grammar.base.AbstractType;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -76,9 +77,14 @@ public class AngularRestService extends BaseModel {
     writer.write("import { " + getClassDef().getDefName() + " } from './" +
         getClassDef().getFileName().replaceAll("\\.ts$", "") + "';\n");
 
-    for (Map.Entry<AbstractNamedType, String> entry: getClassDef().resolveImports().entrySet()) {
-      writer.write("import { " + entry.getKey().getDefName() + " } from '" + entry.getValue() + "';\n");
-    }
+    getClassDef().resolveImports().entrySet().stream().sorted(Map.Entry.comparingByKey(
+        Comparator.comparing(AbstractNamedType::getDefName))).forEach( entry -> {
+          try {
+            writer.write("import { " + entry.getKey().getDefName() + " } from '" + entry.getValue() + "';\n");
+          } catch(IOException e) {
+            throw new RuntimeException(e);
+          }
+    });
 
     writer.write("\n@Injectable({\n  providedIn: 'root'\n})\n");
     writer.write(format("export class %s implements %s {\n", getDefName(), getClassDef().getDefName()));
@@ -92,141 +98,146 @@ public class AngularRestService extends BaseModel {
     if ("/".equalsIgnoreCase(baseUrlPath)) {
       baseUrlPath = "";
     }
+    final String basePath = baseUrlPath;
 
     writer.write("  constructor(private http: HttpClient, @Inject(");
     writer.write(this.contextToken);
     writer.write(") private context: string) {}\n\n");
 
-    for (Map.Entry<String, RestMethod> entry : getRestMethods().entrySet()) {
-      String methodName = entry.getKey();
-      RestMethod restMethod = entry.getValue();
-      FunctionType functionType = getClassDef().getMethods().get(methodName);
-      boolean hasBeanParams = restMethod.getParams().stream().anyMatch(p -> p.getType() == ParamType.BEAN);
-      writer.write("  public " + methodName);
-      functionType.writeNonLambda(writer);
-      writer.write(" {\n");
+    getRestMethods().entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> {
+      try {
+        String methodName = entry.getKey();
+        RestMethod restMethod = entry.getValue();
+        FunctionType functionType = getClassDef().getMethods().get(methodName);
+        boolean hasBeanParams = restMethod.getParams().stream().anyMatch(p -> p.getType() == ParamType.BEAN);
+        writer.write("  public " + methodName);
+        functionType.writeNonLambda(writer);
+        writer.write(" {\n");
 
-      // Path Params
-      writer.write("    const pathParams = {\n");
-      int pathParamCount = 0;
-      for ( Param param: restMethod.getParams()) {
-        if (param.getType() == ParamType.PATH) {
-          if (pathParamCount++ > 0) {
-            writer.write(",\n");
-          }
-          writer.write(format("      %s: '' + %s", param.getName(), param.getName()));
-        } else if (param.getType() == ParamType.BEAN) {
-          hasBeanParams = true;
-        }
-      }
-      writer.write("\n    };\n");
-      // Query Params
-      writer.write("    const params = {\n");
-
-      int queryParamCount = 0;
-      for (Param param : restMethod.getParams()) {
-        if (param.getType() == ParamType.QUERY) {
-          if (queryParamCount++ > 0) {
-            writer.write(",\n");
-          }
-          AbstractType paramType = functionType.getParameters().get(param.getName());
-          if (paramType instanceof ArrayType) {
-            writer.write(format("        %s: %s.map(v => '' + v)", param.getName(), param.getName()));
-          } else {
-            writer.write(format("        %s: '' + %s", param.getName(), param.getName()));
+        // Path Params
+        writer.write("    const pathParams = {\n");
+        int pathParamCount = 0;
+        for ( Param param: restMethod.getParams()) {
+          if (param.getType() == ParamType.PATH) {
+            if (pathParamCount++ > 0) {
+              writer.write(",\n");
+            }
+            writer.write(format("      %s: '' + %s", param.getName(), param.getName()));
+          } else if (param.getType() == ParamType.BEAN) {
+            hasBeanParams = true;
           }
         }
-      }
-      writer.write("\n    };\n");
+        writer.write("\n    };\n");
+        // Query Params
+        writer.write("    const params = {\n");
 
-      // Bean Params
-      if (hasBeanParams) {
+        int queryParamCount = 0;
         for (Param param : restMethod.getParams()) {
-          if (param.getType() == ParamType.BEAN) {
-            writer.write(format("    for ( const key in %s ) {\n", param.getName()));
-            writer.write("      if (key !== undefined && key !== null) {\n");
-            writer.write(format("        params[key] = %s[key];\n", param.getName()));
-            writer.write("      }\n");
-            writer.write("    }\n");
+          if (param.getType() == ParamType.QUERY) {
+            if (queryParamCount++ > 0) {
+              writer.write(",\n");
+            }
+            AbstractType paramType = functionType.getParameters().get(param.getName());
+            if (paramType instanceof ArrayType) {
+              writer.write(format("        %s: %s.map(v => '' + v)", param.getName(), param.getName()));
+            } else {
+              writer.write(format("        %s: '' + %s", param.getName(), param.getName()));
+            }
           }
         }
-      }
+        writer.write("\n    };\n");
 
-      writer.write("\n");
-
-      String path = restMethod.getPath()
-          .replace("{","${encodeURIComponent(pathParams.")
-          .replace("}", ")}")
-          .trim();
-
-      if (!path.startsWith("/")) {
-        path = "/" + path;
-      }
-      if ("/".equalsIgnoreCase(path)) {
-        path = "";
-      }
-      writer.write(format("    const urlTmpl = `${this.context}%s%s`;\n\n", baseUrlPath, path));
-      if (restMethod.getHttpMethod() == HttpMethod.GET) {
-        if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType()) ||
-            ((AngularObservableType)functionType.getResultType()).getType() instanceof BooleanType) {
-          writer.write("    return this.http.get<");
-          ((AngularObservableType)functionType.getResultType()).getType().write(writer);
-          writer.write(">(urlTmpl, {\n");
-          writer.write("      params: params,\n");
-          writer.write("      responseType: 'json'\n");
-        } else {
-          writer.write("    return this.http.get(urlTmpl, {\n");
-          writer.write("      params: params,\n");
-          writer.write("      responseType: 'blob'\n");
-        }
-        writer.write("    });\n");
-      } else if (restMethod.getHttpMethod() == HttpMethod.POST) {
-        writer.write("    return this.http.post<");
-        ((AngularObservableType)functionType.getResultType()).getType().write(writer);
-        writer.write(">(urlTmpl, {\n");
-        for (Param param: restMethod.getParams()) {
-          if (param.getType() == ParamType.BODY){
-            writer.write(format("      data: %s,\n", param.getName() ));
-            break;
+        // Bean Params
+        if (hasBeanParams) {
+          for (Param param : restMethod.getParams()) {
+            if (param.getType() == ParamType.BEAN) {
+              writer.write(format("    for ( const key in %s ) {\n", param.getName()));
+              writer.write("      if (key !== undefined && key !== null) {\n");
+              writer.write(format("        params[key] = %s[key];\n", param.getName()));
+              writer.write("      }\n");
+              writer.write("    }\n");
+            }
           }
         }
-        writer.write("      params: params,\n");
-        if (!(functionType.getResultType() instanceof VoidType)) {
-          if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
+
+        writer.write("\n");
+
+        String path = restMethod.getPath()
+            .replace("{","${encodeURIComponent(pathParams.")
+            .replace("}", ")}")
+            .trim();
+
+        if (!path.startsWith("/")) {
+          path = "/" + path;
+        }
+        if ("/".equalsIgnoreCase(path)) {
+          path = "";
+        }
+        writer.write(format("    const urlTmpl = `${this.context}%s%s`;\n\n", basePath, path));
+        if (restMethod.getHttpMethod() == HttpMethod.GET) {
+          if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType()) ||
+              ((AngularObservableType)functionType.getResultType()).getType() instanceof BooleanType) {
+            writer.write("    return this.http.get<");
+            ((AngularObservableType)functionType.getResultType()).getType().write(writer);
+            writer.write(">(urlTmpl, {\n");
+            writer.write("      params: params,\n");
             writer.write("      responseType: 'json'\n");
           } else {
+            writer.write("    return this.http.get(urlTmpl, {\n");
+            writer.write("      params: params,\n");
             writer.write("      responseType: 'blob'\n");
           }
-        }
-        writer.write("    });\n");
-      } else if (restMethod.getHttpMethod() == HttpMethod.PUT) {
-        writer.write("    return this.http.put<");
-        ((AngularObservableType)functionType.getResultType()).getType().write(writer);
-        writer.write(">(urlTmpl, {\n");
-        for (Param param: restMethod.getParams()) {
-          if (param.getType() == ParamType.BODY){
-            writer.write(format("      data: %s,\n", param.getName() ));
-            break;
+          writer.write("    });\n");
+        } else if (restMethod.getHttpMethod() == HttpMethod.POST) {
+          writer.write("    return this.http.post<");
+          ((AngularObservableType)functionType.getResultType()).getType().write(writer);
+          writer.write(">(urlTmpl, {\n");
+          for (Param param: restMethod.getParams()) {
+            if (param.getType() == ParamType.BODY){
+              writer.write(format("      data: %s,\n", param.getName() ));
+              break;
+            }
           }
-        }
-        if (!(functionType.getResultType() instanceof VoidType)) {
-          if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
-            writer.write("      responseType: 'json',\n");
-          } else {
-            writer.write("      responseType: 'blob',\n");
+          writer.write("      params: params,\n");
+          if (!(functionType.getResultType() instanceof VoidType)) {
+            if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
+              writer.write("      responseType: 'json'\n");
+            } else {
+              writer.write("      responseType: 'blob'\n");
+            }
           }
+          writer.write("    });\n");
+        } else if (restMethod.getHttpMethod() == HttpMethod.PUT) {
+          writer.write("    return this.http.put<");
+          ((AngularObservableType)functionType.getResultType()).getType().write(writer);
+          writer.write(">(urlTmpl, {\n");
+          for (Param param: restMethod.getParams()) {
+            if (param.getType() == ParamType.BODY){
+              writer.write(format("      data: %s,\n", param.getName() ));
+              break;
+            }
+          }
+          if (!(functionType.getResultType() instanceof VoidType)) {
+            if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
+              writer.write("      responseType: 'json',\n");
+            } else {
+              writer.write("      responseType: 'blob',\n");
+            }
+          }
+          writer.write("      params: params\n");
+          writer.write("    });\n");
+        } else if (restMethod.getHttpMethod() == HttpMethod.DELETE) {
+          writer.write("    return this.http.delete(urlTmpl, {\n");
+          writer.write("      params: params,\n");
+          writer.write("      responseType: 'json'\n");
+          writer.write("    });\n");
         }
-        writer.write("      params: params\n");
-        writer.write("    });\n");
-      } else if (restMethod.getHttpMethod() == HttpMethod.DELETE) {
-        writer.write("    return this.http.delete(urlTmpl, {\n");
-        writer.write("      params: params,\n");
-        writer.write("      responseType: 'json'\n");
-        writer.write("    });\n");
-      }
 
-      writer.write("  }\n\n");
-    }
+        writer.write("  }\n\n");
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    });
 
     writer.write("}\n\n");
   }
