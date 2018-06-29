@@ -1,34 +1,16 @@
-/*******************************************************************************
- * Copyright 2013 Raphael Jolivet
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
 package java2typescript.jackson.module.grammar;
 
 import static java.lang.String.format;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Stack;
 import java.util.TreeMap;
 
 import java2typescript.jackson.module.PathResolver;
@@ -37,26 +19,20 @@ import java2typescript.jackson.module.grammar.base.AbstractType;
 
 public class ClassType extends AbstractNamedType {
 
-  static private ClassType OBJECT_TYPE = new ClassType(new String[]{ "" }, "Object");
-
   private Map<String, AbstractType> fields = new LinkedHashMap<>();
   private Map<String, FunctionType> methods = new LinkedHashMap<>();
+  private Map<String, GenericType> generics = new LinkedHashMap<>();
 
   /**
    *
    * @param packagePath
    * @param className
    */
-  public ClassType(String[] packagePath, String className) {
+  public ClassType(String[] packagePath, String className, Map<String, GenericType> generics) {
     super(packagePath, className);
-  }
-
-  /**
-   *
-   * @return ClassType
-   */
-  public static ClassType getObjectClass() {
-    return OBJECT_TYPE;
+    if (generics != null && generics.size() > 0) {
+      this.generics.putAll(generics);
+    }
   }
 
   @Override
@@ -72,7 +48,7 @@ public class ClassType extends AbstractNamedType {
       });
       writer.write("\n");
     }
-    writer.write(format("export interface %s {\n", getDefName()));
+    writer.write(format("export interface %s%s {\n", getDefName(), getGenericTypesSignature()));
     fields.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> {
       try {
         writer.write(format("  %s?: ", entry.getKey()));
@@ -102,9 +78,31 @@ public class ClassType extends AbstractNamedType {
     return methods;
   }
 
+  public String getGenericTypesSignature() {
+    StringBuilder signature = new StringBuilder();
+
+    generics.values().stream().forEach(genericType -> {
+      if (signature.length() > 0) {
+        signature.append(", ");
+      }
+      signature.append(genericType.getName());
+    });
+    return (signature.length() > 0) ? "<" + signature.toString() + ">" : "";
+  }
+
   @Override
   public void write(Writer writer) throws IOException {
     writer.write(getDefName());
+    if (generics.size() > 0) {
+      writer.write("<");
+      for (int i = 0; i < generics.values().size(); i++) {
+        if (i > 0) {
+          writer.write(", ");
+        }
+        AnyType.getInstance().write(writer);
+      }
+      writer.write(">");
+    }
   }
 
   @Override
@@ -118,13 +116,11 @@ public class ClassType extends AbstractNamedType {
     List<String> packagePathList1 = new ArrayList<>(Arrays.asList(packagePath));
     PathResolver pathResolver = PathResolver.getResolver();
 
-    getFields().values().stream().forEach(v -> {
-      pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, v));
-    });
+    getFields().values().stream().forEach(v ->
+        pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, v)));
     getMethods().values().stream().forEach(m -> {
-      m.getParameters().values().stream().forEach(v -> {
-        pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, v));
-      });
+      m.getParameters().values().stream().forEach(v ->
+          pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, v)));
       pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, m.getResultType()));
     });
     return imports;

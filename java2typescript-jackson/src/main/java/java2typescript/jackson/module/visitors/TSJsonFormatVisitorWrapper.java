@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonStringFormatVisitor;
 
 import java2typescript.jackson.module.grammar.EnumType;
+import java2typescript.jackson.module.grammar.GenericType;
 import java2typescript.jackson.module.grammar.Module;
 import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 import java2typescript.jackson.module.grammar.base.AbstractType;
@@ -45,20 +46,25 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
     super(module);
   }
 
-  /** Visit recursively the type, or return a cached response */
+  /**
+   * Visit types recursively, or return a cached response.
+   * @param baseVisitor
+   * @param handler
+   * @param typeHint
+   * @return
+   * @throws JsonMappingException
+   */
   public static AbstractType getTSTypeForHandler(ABaseTSJsonFormatVisitor<?> baseVisitor,
       JsonFormatVisitable handler, JavaType typeHint) throws JsonMappingException {
-
     AbstractType computedType = baseVisitor.getComputedTypes().get(typeHint);
 
-    if (computedType != null) {
-      return computedType;
+    if (computedType == null) { // computed type is not cached.
+      TSJsonFormatVisitorWrapper visitor = new TSJsonFormatVisitorWrapper(baseVisitor);
+      handler.acceptJsonFormatVisitor(visitor, typeHint);
+      baseVisitor.getComputedTypes().put(typeHint, visitor.getType());
+      computedType = visitor.getType();
     }
-
-    TSJsonFormatVisitorWrapper visitor = new TSJsonFormatVisitorWrapper(baseVisitor);
-    handler.acceptJsonFormatVisitor(visitor, typeHint);
-    baseVisitor.getComputedTypes().put(typeHint, visitor.getType());
-    return visitor.getType();
+    return computedType;
   }
 
   private <T extends ABaseTSJsonFormatVisitor<?>> T setTypeAndReturn(T actualVisitor) {
@@ -66,29 +72,38 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
     return actualVisitor;
   }
 
-  /** Either Java simple name or @JsonTypeName annotation */
+  /**
+   * Either Java simple name or @JsonTypeName annotation.
+   * @param type
+   * @return
+   */
   private String[] getNames(JavaType type) {
+    String[] retValue;
     JsonTypeName typeName = type.getRawClass().getAnnotation(JsonTypeName.class);
+    // If @JsonTypeName annotation
     if (typeName != null) {
-      return new String[] { null, typeName.value() };
+      retValue = new String[] { null, typeName.value() };
+    } else { // Java simple name
+      Class clazz = type.getRawClass();
+      retValue = new String[] {clazz.getPackage().getName(), clazz.getCanonicalName()};
     }
-    Class clazz = type.getRawClass();
-    return new String[]{ clazz.getPackage().getName(), clazz.getCanonicalName() };
+    return retValue;
   }
 
   private TSJsonObjectFormatVisitor useNamedClassOrParse(JavaType javaType) {
+    TSJsonObjectFormatVisitor visitor = null;
     String[] names = getNames(javaType);
     AbstractNamedType namedType = getModule(names[0]).getNamedTypes().get(names[1]);
 
     if (namedType == null) {
-      TSJsonObjectFormatVisitor visitor = new TSJsonObjectFormatVisitor(this, names[1], javaType.getRawClass());
+      visitor = new TSJsonObjectFormatVisitor(this, names[1], javaType.getRawClass());
       type = visitor.getType();
       getModule(names[0]).getNamedTypes().put(visitor.getType().getName(), visitor.getType());
       visitor.addPublicMethods();
-      return visitor;
+    } else {
+      type = namedType;
     }
-    type = namedType;
-    return null;
+    return visitor;
   }
 
   private EnumType parseEnumOrGetFromCache(JavaType javaType) {

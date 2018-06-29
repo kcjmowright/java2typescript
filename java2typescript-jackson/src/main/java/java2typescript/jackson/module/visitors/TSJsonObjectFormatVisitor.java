@@ -1,18 +1,3 @@
-/*******************************************************************************
- * Copyright 2013 Raphael Jolivet
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
 package java2typescript.jackson.module.visitors;
 
 import static java.lang.reflect.Modifier.isPublic;
@@ -24,10 +9,13 @@ import static java2typescript.jackson.module.visitors.TSJsonFormatVisitorWrapper
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.beans.Transient;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JavaType;
@@ -48,19 +36,28 @@ import com.fasterxml.jackson.databind.type.TypeBindings;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import java2typescript.jackson.module.grammar.AnyType;
+import java2typescript.jackson.module.grammar.ArrayType;
 import java2typescript.jackson.module.grammar.ClassType;
 import java2typescript.jackson.module.grammar.FunctionType;
+import java2typescript.jackson.module.grammar.GenericType;
 import java2typescript.jackson.module.grammar.VoidType;
 import java2typescript.jackson.module.grammar.base.AbstractType;
 
 public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassType> implements JsonObjectFormatVisitor {
 
   private Class clazz;
+  private Map<String, GenericType> generics = new LinkedHashMap<>();
 
   public TSJsonObjectFormatVisitor(ABaseTSJsonFormatVisitor<?> parentHolder, String className, Class clazz) {
     super(parentHolder);
     String[] packagePath = clazz.getPackage().getName().split("\\.");
-    type = new ClassType(packagePath, className);
+
+    Arrays.stream(clazz.getTypeParameters())
+      .forEach(typeVariable -> {
+        GenericType genericType = new GenericType(typeVariable.getName());
+        generics.put(genericType.getName(), genericType);
+      });
+    type = new ClassType(packagePath, className, generics);
     this.clazz = clazz;
   }
 
@@ -69,59 +66,52 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
   }
 
   private boolean isIgnoreableMethod(Method method, BeanInfo beanInfo) {
-    if ("toString".equalsIgnoreCase(method.getName())) {
-      return true;
-    }
-    if ("equals".equalsIgnoreCase(method.getName())) {
-      return true;
-    }
-    if ("hashCode".equalsIgnoreCase(method.getName())) {
-      return true;
-    }
-    for (Annotation annotation : method.getAnnotations()) {
-      if ("@javax.ws.rs.GET()".equalsIgnoreCase(annotation.toString()) ||
+    boolean ignorable = false;
+
+    if ("toString".equalsIgnoreCase(method.getName()) ||
+        "equals".equalsIgnoreCase(method.getName()) ||
+        "hashCode".equalsIgnoreCase(method.getName())) {
+      ignorable = true;
+    } else {
+      boolean annotated = Arrays.stream(method.getAnnotations()).anyMatch(annotation -> (
+          "@javax.ws.rs.GET()".equalsIgnoreCase(annotation.toString()) ||
           "@javax.ws.rs.POST()".equalsIgnoreCase(annotation.toString()) ||
           "@javax.ws.rs.PUT()".equalsIgnoreCase(annotation.toString()) ||
-          "@javax.ws.rs.DELETE()".equalsIgnoreCase(annotation.toString())) {
-        return false;
+          "@javax.ws.rs.DELETE()".equalsIgnoreCase(annotation.toString()))
+      );
+
+      if (!annotated) {
+        ignorable = Arrays.stream(beanInfo.getPropertyDescriptors()).anyMatch(property ->
+            method.equals(property.getReadMethod()) ||
+                method.equals(property.getWriteMethod()));
       }
     }
-    for (PropertyDescriptor property : beanInfo.getPropertyDescriptors()) {
-      if (method.equals(property.getReadMethod())) {
-        return true;
-      }
-      if (method.equals(property.getWriteMethod())) {
-        return true;
-      }
-    }
-    return false;
+    return ignorable;
   }
 
   public void addPublicMethods() {
-    AnnotatedClass annotatedClass = AnnotatedClass.construct(this.getClass(), new JacksonAnnotationIntrospector(), null);
-    for (Method method : this.clazz.getDeclaredMethods()) {
+    final AnnotatedClass annotatedClass = AnnotatedClass.construct(this.getClass(), new JacksonAnnotationIntrospector(), null);
 
-      // Only public and non-static
+    Arrays.stream(this.clazz.getDeclaredMethods()).filter(method -> {
+      boolean add = true;
+
       if (!isPublic(method.getModifiers()) || isStatic(method.getModifiers())) {
-        continue;
-      }
-
-      // Exclude ignorable methods.
-      try {
-        BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
-        if (isIgnoreableMethod(method, beanInfo)) {
-          continue;
+        add = false;
+      } else if (method.getAnnotation(Transient.class) != null) { // Ignore @Transient methods
+        add = false;
+      } else {
+        // Exclude ignorable methods.
+        try {
+          BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
+          if (isIgnoreableMethod(method, beanInfo)) {
+            add = false;
+          }
+        } catch (Exception e) {
+          throw new RuntimeException(e);
         }
-      } catch (Exception e) {
-        throw new RuntimeException(e);
       }
-
-      // Ignore @Transient methods
-      if (method.getAnnotation(Transient.class) != null)
-        continue;
-
-      addMethod(annotatedClass, method);
-    }
+      return add;
+    }).forEach(method -> addMethod(annotatedClass, method));
   }
 
   private AbstractType getTSTypeForClass(AnnotatedMember member) {
@@ -169,7 +159,22 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
 
   @Override
   public void optionalProperty(BeanProperty writer) throws JsonMappingException {
-    addField(writer.getName(), getTSTypeForProperty(writer));
+    AbstractType abstractType = getTSTypeForProperty(writer);
+
+    if (generics.size() > 0) {
+      Map<String, GenericType> genericTypeMap = parseGenericPropertyTypeName(((BeanPropertyWriter) writer).getGenericPropertyType().getTypeName());
+
+      try {
+        abstractType = (AbstractType) abstractType.clone();
+      } catch (CloneNotSupportedException e) {
+        throw new RuntimeException(e);
+      }
+
+      if (abstractType instanceof ArrayType && genericTypeMap.size() > 0) {
+        ((ArrayType) abstractType).setItemType(genericTypeMap.values().iterator().next());
+      }
+    }
+    addField(writer.getName(), abstractType);
   }
 
   @Override
@@ -178,28 +183,24 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
     addField(name, getTSTypeForHandler(this, handler, propertyTypeHint));
   }
 
-  public void optionalProperty(String name) throws JsonMappingException {
-    addField(name, AnyType.getInstance());
-  }
-
   protected AbstractType getTSTypeForProperty(BeanProperty writer) throws JsonMappingException {
     if (writer == null) {
       throw new IllegalArgumentException("Null writer");
     }
     JavaType type = writer.getType();
-    if (type.getRawClass().equals(Void.TYPE)) {
-      return VoidType.getInstance();
-    }
-    try {
-      JsonSerializer<Object> ser = getSer(writer);
-      if (ser != null) {
-        return getTSTypeForHandler(this, ser, type);
-      }
-      return AnyType.getInstance();
-    } catch (Exception e) {
-      return AnyType.getInstance();
-    }
+    AbstractType abstractType = AnyType.getInstance();
 
+    if (type.getRawClass().equals(Void.TYPE)) {
+      abstractType = VoidType.getInstance();
+    } else {
+      try {
+        JsonSerializer<Object> ser = getSer(writer);
+        if (ser != null) {
+          abstractType = getTSTypeForHandler(this, ser, type);
+        }
+      } catch (Exception ignore) {}
+    }
+    return abstractType;
   }
 
   protected JsonSerializer<Object> getSer(BeanProperty writer) throws JsonMappingException {
@@ -213,4 +214,21 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
     return ser;
   }
 
+  private Map<String, GenericType> parseGenericPropertyTypeName(String name) {
+    Map<String, GenericType> genericTypes = new LinkedHashMap<>();
+
+    try {
+      Pattern pattern = Pattern.compile("<([^>]*)>");
+      Matcher matcher = pattern.matcher(name);
+
+      for (int i = 1; matcher.find(); i++) {
+        GenericType genericType = generics.get(matcher.group(i));
+
+        if (genericType != null) {
+          genericTypes.put(genericType.getName(), genericType);
+        }
+      }
+    } catch (Exception ignore) {}
+    return genericTypes;
+  }
 }

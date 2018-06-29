@@ -2,6 +2,7 @@ package java2typescript.jackson.module;
 
 import java2typescript.jackson.module.grammar.AngularObservableType;
 import java2typescript.jackson.module.grammar.ArrayType;
+import java2typescript.jackson.module.grammar.GenericType;
 import java2typescript.jackson.module.grammar.MapType;
 import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 import java2typescript.jackson.module.grammar.base.AbstractType;
@@ -47,8 +48,10 @@ public class PathResolver {
     }
     List<String> thePackagePathList = new ArrayList<>(packagePathList1);
     List<String> packagePathList2 = new ArrayList<>(Arrays.asList(namedType.getPackagePath()));
-    imports.put(namedType, resolveImportsPath(thePackagePathList, packagePathList2) +
-        "/" + namedType.getFileName().replaceAll("\\.ts$", ""));
+    if (!(namedType instanceof GenericType)) {
+      imports.put(namedType, resolveImportsPath(thePackagePathList, packagePathList2) +
+          "/" + namedType.getFileName().replaceAll("\\.ts$", ""));
+    }
   }
 
   /**
