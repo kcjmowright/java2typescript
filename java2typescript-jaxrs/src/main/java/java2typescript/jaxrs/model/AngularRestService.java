@@ -174,63 +174,15 @@ public class AngularRestService extends BaseModel {
           path = "";
         }
         writer.write(format("    const urlTmpl = `${this.context}%s%s`;\n\n", basePath, path));
+
         if (restMethod.getHttpMethod() == HttpMethod.GET) {
-          if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType()) ||
-              ((AngularObservableType)functionType.getResultType()).getType() instanceof BooleanType) {
-            writer.write("    return this.http.get<");
-            ((AngularObservableType)functionType.getResultType()).getType().write(writer);
-            writer.write(">(urlTmpl, {\n");
-            writer.write("      params: params,\n");
-            writer.write("      responseType: 'json'\n");
-          } else {
-            writer.write("    return this.http.get(urlTmpl, {\n");
-            writer.write("      params: params,\n");
-            writer.write("      responseType: 'blob'\n");
-          }
-          writer.write("    });\n");
+          writeGet(writer, functionType, restMethod);
         } else if (restMethod.getHttpMethod() == HttpMethod.POST) {
-          writer.write("    return this.http.post<");
-          ((AngularObservableType)functionType.getResultType()).getType().write(writer);
-          writer.write(">(urlTmpl, {\n");
-          for (Param param: restMethod.getParams()) {
-            if (param.getType() == ParamType.BODY){
-              writer.write(format("      data: %s,\n", param.getName() ));
-              break;
-            }
-          }
-          writer.write("      params: params,\n");
-          if (!(functionType.getResultType() instanceof VoidType)) {
-            if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
-              writer.write("      responseType: 'json'\n");
-            } else {
-              writer.write("      responseType: 'blob'\n");
-            }
-          }
-          writer.write("    });\n");
+          writePost(writer, functionType, restMethod);
         } else if (restMethod.getHttpMethod() == HttpMethod.PUT) {
-          writer.write("    return this.http.put<");
-          ((AngularObservableType)functionType.getResultType()).getType().write(writer);
-          writer.write(">(urlTmpl, {\n");
-          for (Param param: restMethod.getParams()) {
-            if (param.getType() == ParamType.BODY){
-              writer.write(format("      data: %s,\n", param.getName() ));
-              break;
-            }
-          }
-          if (!(functionType.getResultType() instanceof VoidType)) {
-            if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
-              writer.write("      responseType: 'json',\n");
-            } else {
-              writer.write("      responseType: 'blob',\n");
-            }
-          }
-          writer.write("      params: params\n");
-          writer.write("    });\n");
+          writePut(writer, functionType, restMethod);
         } else if (restMethod.getHttpMethod() == HttpMethod.DELETE) {
-          writer.write("    return this.http.delete(urlTmpl, {\n");
-          writer.write("      params: params,\n");
-          writer.write("      responseType: 'json'\n");
-          writer.write("    });\n");
+          writeDelete(writer);
         }
 
         writer.write("  }\n\n");
@@ -240,6 +192,85 @@ public class AngularRestService extends BaseModel {
     });
 
     writer.write("}\n\n");
+  }
+
+  private void writeGet(Writer writer, FunctionType functionType, RestMethod restMethod) throws IOException {
+    if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType()) ||
+        ((AngularObservableType)functionType.getResultType()).getType() instanceof BooleanType) {
+      writer.write("    return this.http.get<");
+      ((AngularObservableType)functionType.getResultType()).getType().write(writer);
+      writer.write(">(urlTmpl, {\n");
+      writer.write("      params: params,\n");
+      writer.write("      responseType: 'json'\n");
+    } else {
+      writer.write("    return this.http.get(urlTmpl, {\n");
+      writer.write("      params: params,\n");
+      writer.write("      responseType: 'blob'\n");
+    }
+    writer.write("    });\n");
+  }
+
+  private void writePost(Writer writer, FunctionType functionType, RestMethod restMethod) throws IOException {
+    writer.write("    return this.http.post<");
+    ((AngularObservableType)functionType.getResultType()).getType().write(writer);
+    writer.write(">(urlTmpl, ");
+
+    String postBody = "null";
+
+    for (Param param: restMethod.getParams()) {
+      if (param.getType() == ParamType.BODY){
+        postBody = param.getName();
+        break;
+      }
+    }
+
+    writer.write(format("%s, {\n      params: params,\n", postBody));
+
+    if (!(functionType.getResultType() instanceof VoidType)) {
+      if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType())) {
+        writer.write("      responseType: 'json'\n");
+      } else {
+        writer.write("      responseType: 'blob'\n");
+      }
+    }
+    writer.write("    });\n");
+  }
+
+  private void writePut(Writer writer, FunctionType functionType, RestMethod restMethod) throws IOException {
+    boolean isJson = "application/json".equalsIgnoreCase(restMethod.getProducesContentType());
+    boolean isXml = "application/xml".equalsIgnoreCase(restMethod.getProducesContentType());
+
+    writer.write("    return this.http.put<");
+    if (isJson || isXml) {
+      ((AngularObservableType)functionType.getResultType()).getType().write(writer);
+    } else {
+      writer.write("Blob");
+    }
+    writer.write(">(urlTmpl, ");
+
+    String putBody = "null";
+
+    for (Param param: restMethod.getParams()) {
+      if (param.getType() == ParamType.BODY){
+        putBody = param.getName();
+        break;
+      }
+    }
+
+    writer.write(format("%s, {\n      params: params", putBody));
+    if (!(functionType.getResultType() instanceof VoidType)) {
+      if (isJson) {
+        writer.write(",\n      responseType: 'json'");
+      }
+    }
+    writer.write("\n    });\n");
+  }
+
+  private void writeDelete(Writer writer) throws IOException {
+    writer.write("    return this.http.delete(urlTmpl, {\n");
+    writer.write("      params: params,\n");
+    writer.write("      responseType: 'json'\n");
+    writer.write("    });\n");
   }
 
 }
