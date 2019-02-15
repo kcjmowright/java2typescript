@@ -15,6 +15,7 @@
  ******************************************************************************/
 package java2typescript.jackson.module.visitors;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,6 +37,8 @@ public abstract class ABaseTSJsonFormatVisitor<T extends AbstractType> implement
 
   private Module module;
 
+  private Map<String, Module> moduleCache;
+
   private Map<JavaType, AbstractType> computedTypes;
 
   public ABaseTSJsonFormatVisitor(ABaseTSJsonFormatVisitor parentHolder) {
@@ -45,6 +48,8 @@ public abstract class ABaseTSJsonFormatVisitor<T extends AbstractType> implement
   public ABaseTSJsonFormatVisitor(Module module) {
     this.parentHolder = null;
     this.module = module;
+    moduleCache = new HashMap<>();
+    moduleCache.put("", module);
   }
 
   public SerializerProvider getProvider() {
@@ -64,17 +69,37 @@ public abstract class ABaseTSJsonFormatVisitor<T extends AbstractType> implement
 
   public Module getModule(String moduleName) {
     if (parentHolder == null || parentHolder == this) {
-      if (moduleName == null || moduleName.equalsIgnoreCase(module.getName())) {
-        return module;
+      if (moduleName == null) {
+        moduleName = "";
       }
-      Module newModule = module.getModules().get(moduleName);
+      Module newModule = moduleCache.get(moduleName);
       if (newModule == null) {
-        newModule = new Module(moduleName);
-        module.getModules().put(moduleName, newModule);
+        newModule = createModule(moduleName);
       }
       return newModule;
     }
     return parentHolder.getModule(moduleName);
+  }
+
+  private Module createModule(String moduleName) {
+    Module newModule = new Module(moduleName);
+    moduleCache.put(moduleName, newModule);
+    String parentName = getParentName(moduleName);
+    Module parent = getModule(parentName);
+    parent.getModules().put(moduleName, newModule);
+    return newModule;
+  }
+
+  private String getParentName(String moduleName) {
+    String[] packages = moduleName.split("\\.");
+    return getParentName(packages);
+  }
+
+  private String getParentName(String[] packageNames) {
+    if(packageNames.length - 1 > 0 ) {
+      return String.join(".", Arrays.asList(packageNames).subList(0, packageNames.length - 1));
+    }
+    return "";
   }
 
   public Map<JavaType, AbstractType> getComputedTypes() {

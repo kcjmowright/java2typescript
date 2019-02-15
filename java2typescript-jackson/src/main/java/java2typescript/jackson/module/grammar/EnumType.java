@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import java2typescript.jackson.module.Dasherize;
 import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 
 public class EnumType extends AbstractNamedType {
@@ -49,17 +50,16 @@ public class EnumType extends AbstractNamedType {
     for (String value : values) {
       writer.write(format("  '%s': '%s' as %s,\n", value, value, getSimpleName()));
     }
-    writer.write("  values: () => [\n");
+    writer.write("  values: function() {\n    return [\n");
 
     i = values.iterator();
     while (i.hasNext()) {
-      writer.write(format("    this['%s']", i.next()));
+      writer.write(format("      this['%s']", i.next()));
       if (i.hasNext()) {
         writer.write(",\n");
       }
     }
-    writer.write("\n  ]\n");
-    writer.write("};\n");
+    writer.write("\n    ];\n  }\n};\n");
     writer.write("/* tslint:enable:object-literal-sort-keys */\n");
   }
 
@@ -75,5 +75,4 @@ public class EnumType extends AbstractNamedType {
   public void setValues(Set<String> values) {
     this.values = values;
   }
-
 }

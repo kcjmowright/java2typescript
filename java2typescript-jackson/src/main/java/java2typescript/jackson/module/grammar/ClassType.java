@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import java2typescript.jackson.module.PathResolver;
 import java2typescript.jackson.module.grammar.base.AbstractNamedType;
@@ -46,6 +47,13 @@ public class ClassType extends AbstractNamedType {
           throw new RuntimeException(e);
         }
       });
+      writer.write("\n");
+    }
+    if (this.innerTypes.size() > 0) {
+      for( AbstractNamedType innerType: getInnerTypes().stream().sorted(Comparator.comparing(AbstractNamedType::getDefName)).collect(Collectors.toList())) {
+        innerType.writeDef(writer);
+        writer.write("\n");
+      }
       writer.write("\n");
     }
     writer.write(format("export interface %s%s {\n", getDefName(), getGenericTypesSignature()));
@@ -116,11 +124,23 @@ public class ClassType extends AbstractNamedType {
     List<String> packagePathList1 = new ArrayList<>(Arrays.asList(packagePath));
     PathResolver pathResolver = PathResolver.getResolver();
 
-    getFields().values().stream().forEach(v ->
-        pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, v)));
+    getFields().values().stream().filter(f -> {
+      boolean include = true;
+      AbstractType field = f;
+
+      while ((field instanceof MapType) || (field instanceof ArrayType)){
+        field = (field instanceof MapType) ? ((MapType)field).getValueType() : ((ArrayType)field).getItemType();
+      }
+      if (field instanceof AbstractNamedType) {
+        AbstractNamedType enclosingType = ((AbstractNamedType)field).getEnclosingType();
+        include = enclosingType == null || !this.getName().equalsIgnoreCase(enclosingType.getName());
+      }
+      return include;
+    }).forEach(v -> pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, v)));
+
     getMethods().values().stream().forEach(m -> {
-      m.getParameters().values().stream().forEach(v ->
-          pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, v)));
+      m.getParameters().values().stream()
+          .forEach(v -> pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, v)));
       pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, m.getResultType()));
     });
     return imports;

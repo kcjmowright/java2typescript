@@ -29,9 +29,9 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonNullFormatVisitor;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonNumberFormatVisitor;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonStringFormatVisitor;
+import com.fasterxml.jackson.databind.type.SimpleType;
 
 import java2typescript.jackson.module.grammar.EnumType;
-import java2typescript.jackson.module.grammar.GenericType;
 import java2typescript.jackson.module.grammar.Module;
 import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 import java2typescript.jackson.module.grammar.base.AbstractType;
@@ -90,15 +90,28 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
     return retValue;
   }
 
-  private TSJsonObjectFormatVisitor useNamedClassOrParse(JavaType javaType) {
+  private TSJsonObjectFormatVisitor useNamedClassOrParse(JavaType javaType) throws JsonMappingException {
     TSJsonObjectFormatVisitor visitor = null;
     String[] names = getNames(javaType);
-    AbstractNamedType namedType = getModule(names[0]).getNamedTypes().get(names[1]);
+    String moduleName = names[0];
+    String className = names[1];
+    AbstractNamedType namedType = getModule(moduleName).getNamedTypes().get(className);
 
     if (namedType == null) {
-      visitor = new TSJsonObjectFormatVisitor(this, names[1], javaType.getRawClass());
+      Class clazz = javaType.getRawClass();
+      Class enclosingClass = clazz.getEnclosingClass();
+      visitor = new TSJsonObjectFormatVisitor(this, className, clazz);
       type = visitor.getType();
-      getModule(names[0]).getNamedTypes().put(visitor.getType().getName(), visitor.getType());
+
+      //if (enclosingClass == null) {
+        getModule(names[0]).getNamedTypes().put(visitor.getType().getName(), visitor.getType());
+//      } else {
+//        AbstractNamedType enclosingClassType = getEnclosingClassType(moduleName, enclosingClass);
+//        if (enclosingClassType != null) {
+//          enclosingClassType.getInnerTypes().add((AbstractNamedType)type);
+//          ((AbstractNamedType)type).setEnclosingType(enclosingClassType);
+//        }
+//      }
       visitor.addPublicMethods();
     } else {
       type = namedType;
@@ -106,19 +119,40 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
     return visitor;
   }
 
-  private EnumType parseEnumOrGetFromCache(JavaType javaType) {
+  private EnumType parseEnumOrGetFromCache(JavaType javaType) throws JsonMappingException {
     String[] names = getNames(javaType);
-    String[] packagePath = names[0].split("\\.");
-    AbstractType namedType = getModule(names[0]).getNamedTypes().get(names[1]);
-    if (namedType == null) {
-      EnumType enumType = new EnumType(packagePath, names[1]);
+    String moduleName = names[0];
+    String className = names[1];
+    Class enclosingClass = javaType.getRawClass().getEnclosingClass();
+    String[] packagePath = moduleName.split("\\.");
+    EnumType enumType = (EnumType)getModule(moduleName).getNamedTypes().get(className);
+
+    if (enumType == null) {
+      enumType = new EnumType(packagePath, className);
       for (Object val : javaType.getRawClass().getEnumConstants()) {
         enumType.getValues().add(val.toString());
       }
-      getModule(names[0]).getNamedTypes().put(names[1], enumType);
-      return enumType;
+      if (enclosingClass == null) {
+        getModule(moduleName).getNamedTypes().put(className, enumType);
+      } else {
+        AbstractNamedType enclosingClassType = getEnclosingClassType(moduleName, enclosingClass);
+        enumType.setEnclosingType(enclosingClassType);
+        enclosingClassType.getInnerTypes().add(enumType);
+      }
     }
-    return (EnumType) namedType;
+    return enumType;
+  }
+
+  private AbstractNamedType getEnclosingClassType(String moduleName, Class enclosingClass) throws JsonMappingException {
+    AbstractNamedType enclosingClassType = getModule(moduleName).getNamedTypes().get(enclosingClass.getCanonicalName());
+
+    if (enclosingClassType == null) {
+      JavaType javaHint = SimpleType.constructUnsafe(enclosingClass);
+
+      enclosingClassType =
+          (AbstractNamedType) getTSTypeForHandler(this, getProvider().findValueSerializer(enclosingClass), javaHint);
+    }
+    return enclosingClassType;
   }
 
   @Override

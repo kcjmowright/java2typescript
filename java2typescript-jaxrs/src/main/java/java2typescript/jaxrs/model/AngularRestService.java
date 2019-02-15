@@ -2,6 +2,7 @@ package java2typescript.jaxrs.model;
 
 import java2typescript.jackson.module.PathResolver;
 import java2typescript.jackson.module.grammar.AngularObservableType;
+import java2typescript.jackson.module.grammar.AnyType;
 import java2typescript.jackson.module.grammar.ArrayType;
 import java2typescript.jackson.module.grammar.BooleanType;
 import java2typescript.jackson.module.grammar.ClassType;
@@ -111,6 +112,17 @@ public class AngularRestService extends BaseModel {
         FunctionType functionType = getClassDef().getMethods().get(methodName);
         boolean hasBeanParams = restMethod.getParams().stream().anyMatch(p -> p.getType() == ParamType.BEAN);
         writer.write("  public " + methodName);
+        if (restMethod.getHttpMethod() == HttpMethod.DELETE || "text/plain".equalsIgnoreCase(restMethod.getProducesContentType())) {
+          try {
+            functionType = (FunctionType)functionType.clone();
+            functionType.setResultType(AnyType.getInstance());
+          } catch (CloneNotSupportedException e) {
+            /*
+
+             */
+            e.printStackTrace();
+          }
+        }
         functionType.writeNonLambda(writer);
         writer.write(" {\n");
 
@@ -196,12 +208,21 @@ public class AngularRestService extends BaseModel {
 
   private void writeGet(Writer writer, FunctionType functionType, RestMethod restMethod) throws IOException {
     if ("application/json".equalsIgnoreCase(restMethod.getProducesContentType()) ||
-        ((AngularObservableType)functionType.getResultType()).getType() instanceof BooleanType) {
+        ( functionType.getResultType() instanceof AngularObservableType && (((AngularObservableType)functionType.getResultType()).getType() instanceof BooleanType))) {
       writer.write("    return this.http.get<");
-      ((AngularObservableType)functionType.getResultType()).getType().write(writer);
+      AbstractType resultType = functionType.getResultType();
+      if (resultType instanceof AngularObservableType) {
+        ((AngularObservableType) functionType.getResultType()).getType().write(writer);
+      } else {
+        resultType.write(writer);
+      }
       writer.write(">(urlTmpl, {\n");
       writer.write("      params: params,\n");
       writer.write("      responseType: 'json'\n");
+    } else if ("text/plain".equalsIgnoreCase(restMethod.getProducesContentType())) {
+      writer.write("    return this.http.get(urlTmpl, {\n");
+      writer.write("      params: params,\n");
+      writer.write("      responseType: 'text'\n");
     } else {
       writer.write("    return this.http.get(urlTmpl, {\n");
       writer.write("      params: params,\n");
@@ -239,10 +260,13 @@ public class AngularRestService extends BaseModel {
   private void writePut(Writer writer, FunctionType functionType, RestMethod restMethod) throws IOException {
     boolean isJson = "application/json".equalsIgnoreCase(restMethod.getProducesContentType());
     boolean isXml = "application/xml".equalsIgnoreCase(restMethod.getProducesContentType());
+    boolean isText = "text/plain".equalsIgnoreCase(restMethod.getProducesContentType());
 
     writer.write("    return this.http.put<");
     if (isJson || isXml) {
-      ((AngularObservableType)functionType.getResultType()).getType().write(writer);
+      ((AngularObservableType) functionType.getResultType()).getType().write(writer);
+    } else if (isText) {
+      writer.write("any");
     } else {
       writer.write("Blob");
     }

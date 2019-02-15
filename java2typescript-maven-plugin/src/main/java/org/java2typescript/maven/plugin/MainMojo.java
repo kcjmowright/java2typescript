@@ -55,7 +55,7 @@ public class MainMojo extends AbstractMojo {
    * REST service interface directory
    */
   @Parameter(alias = "restServiceBaseDir", required = true)
-  private String restServiceBaseDir;
+  private String[] restServiceBaseDir;
 
   /**
    * Prefix to use when naming resource class implementations.
@@ -157,12 +157,14 @@ public class MainMojo extends AbstractMojo {
           urls.toArray(new URL[0]),
           Thread.currentThread().getContextClassLoader());
 
-      File f = new File(restServiceBaseDir);
-      if (f.isDirectory()) {
-        for (String className : listClassNames(f)) {
-          // Descriptor for service
-          Class<?> serviceClass = urlClassLoader.loadClass(className);
-          classes.add(serviceClass);
+      for( String aRestServiceBaseDir : restServiceBaseDir) {
+        File f = new File(aRestServiceBaseDir);
+        if (f.isDirectory()) {
+          for (String className : listClassNames(f)) {
+            // Descriptor for service
+            Class<?> serviceClass = urlClassLoader.loadClass(className);
+            classes.add(serviceClass);
+          }
         }
       }
 

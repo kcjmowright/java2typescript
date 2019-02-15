@@ -160,33 +160,45 @@ public class ServiceDescriptorGenerator {
    */
   public Module generateTypeScript(String prefix, String contextUrl, String contextToken) throws JsonMappingException {
     DefinitionGenerator defGen = new DefinitionGenerator(mapper);
-    Module module = defGen.generateTypeScript(classes);
+    Module mainModule = defGen.generateTypeScript(classes);
 
     Collection<AngularRestService> restServices = generateRestServices(classes, prefix, contextUrl, contextToken);
 
     for (AngularRestService restService : restServices) {
-      Module subModule = module.getModules().get(String.join(".", restService.getPackagePath()));
-      if (subModule == null) {
-        subModule = module;
-      }
-      subModule.setExport(true);
-      AbstractNamedType abstractNamedType = subModule.getNamedTypes().get(restService.getFullyQualifiedName());
+      Module module = findModule(mainModule, restService.getPackagePath());// mainModule.getModules().get(String.join(".", restService.getPackagePath()));
+      module.setExport(true);
+      AbstractNamedType abstractNamedType = module.getNamedTypes().get(restService.getFullyQualifiedName());
       if (abstractNamedType instanceof ClassType) {
         ClassType classDef = (ClassType) abstractNamedType;
         classDef.setPrefix(prefix);
         decorateParamNames(restService, classDef);
         restService.setClassDef(classDef);
-        subModule.getNamedTypes().put(restService.getFullyQualifiedName(), restService);
-        subModule.getNamedTypes().put(classDef.getFullyQualifiedName(), classDef);
+        module.getNamedTypes().put(restService.getFullyQualifiedName(), restService);
+        module.getNamedTypes().put(classDef.getFullyQualifiedName(), classDef);
 
-        if (subModule.getNamedTypes().get(restService.getServerUrlContextService().getFullyQualifiedName()) == null
-            && String.join(".", subModule.getPackagePath())
+        if (module.getNamedTypes().get(restService.getServerUrlContextService().getFullyQualifiedName()) == null
+            && String.join(".", module.getPackagePath())
               .equalsIgnoreCase(String.join(".", restService.getServerUrlContextService().getPackagePath()))) {
-          subModule.getNamedTypes().put(restService.getServerUrlContextService().getFullyQualifiedName(), restService.getServerUrlContextService());
+          module.getNamedTypes().put(restService.getServerUrlContextService().getFullyQualifiedName(), restService.getServerUrlContextService());
         }
       }
     }
-    return module;
+    return mainModule;
+  }
+
+  public Module findModule(Module module, String[] packagePaths) {
+    String targetPackage = packagePaths.length > 0 ? packagePaths[packagePaths.length - 1] : "";
+    Module next = module;
+    String path = "";
+    for (String partialPath: packagePaths) {
+      path += partialPath;
+      next = next.getModules().get(path);
+      if (targetPackage.equalsIgnoreCase(next.getDefName())) {
+        return next;
+      }
+      path += ".";
+    }
+    return null;
   }
 
   /**

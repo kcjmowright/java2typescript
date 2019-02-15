@@ -14,7 +14,7 @@ public class AngularObservableType extends AbstractNamedType {
   private AbstractType type;
 
   public AngularObservableType(AbstractType type) {
-    super(new String[]{ "rxjs", "Observable" }, "Observable");
+    super(new String[]{ "rxjs" }, "Observable");
     this.type = type;
   }
 

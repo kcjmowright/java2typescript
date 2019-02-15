@@ -8,14 +8,21 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 abstract public class AbstractNamedType extends AbstractType {
 
-  protected final String name;
+  protected AbstractNamedType enclosingType;
+
+  protected String name;
 
   protected String prefix = "";
 
   protected String[] packagePath;
+
+  protected Set<AbstractNamedType> innerTypes = new HashSet<>();
 
   public AbstractNamedType(String[] packagePath, String className) {
     this.name = className;
@@ -54,7 +61,7 @@ abstract public class AbstractNamedType extends AbstractType {
   }
 
   public String getFileName() {
-    return Dasherize.convert(getDefName()) + ".ts";
+    return this.enclosingType == null ? Dasherize.convert(getDefName()) + ".ts" : enclosingType.getFileName();
   }
 
   public String getDefName() {
@@ -65,8 +72,8 @@ abstract public class AbstractNamedType extends AbstractType {
     return this.packagePath;
   }
 
-  public void setPackagePath(String[] packagePath) {
-    this.packagePath = packagePath;
+  public Set<AbstractNamedType> getInnerTypes() {
+    return innerTypes;
   }
 
   public String getFullyQualifiedName() {
@@ -97,4 +104,30 @@ abstract public class AbstractNamedType extends AbstractType {
     return writer;
   }
 
+  public AbstractNamedType getEnclosingType() {
+    return enclosingType;
+  }
+
+  public void setEnclosingType(AbstractNamedType enclosingType) {
+    // Prefix name with enclosing class name concat with $
+    this.name = String.join(".", getPackagePath()) + "." + enclosingType.getSimpleName() + "$" + this.getDefName();
+    this.enclosingType = enclosingType;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    AbstractNamedType that = (AbstractNamedType) o;
+    return name.equalsIgnoreCase(that.name) && Objects.equals(prefix, that.prefix);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, prefix);
+  }
 }

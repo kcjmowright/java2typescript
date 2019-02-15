@@ -1,12 +1,20 @@
 package java2typescript.jackson.module.grammar;
 
+import static java.util.stream.Collectors.toMap;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import java2typescript.jackson.module.grammar.base.AbstractNamedType;
@@ -14,17 +22,13 @@ import java2typescript.jackson.module.grammar.base.AbstractType;
 
 public class Module extends AbstractNamedType {
 
-  private Map<String, Module> modules = new HashMap<>();
+  private Map<String, Module> modules = new LinkedHashMap<>();
 
-  private Map<String, AbstractNamedType> namedTypes = new HashMap<>();
+  private Map<String, AbstractNamedType> namedTypes = new LinkedHashMap<>();
 
   private Map<String, AbstractType> vars = new LinkedHashMap<>();
 
-  private boolean export = false;
-
-  public Module(String[] packagePath, String name) {
-    super(packagePath, name);
-  }
+  private boolean export = true;
 
   public Module(String name) {
     super(name == null ? new String[]{} : name.split("\\."), name);
@@ -76,21 +80,38 @@ public class Module extends AbstractNamedType {
 
   public void writeDef(Writer writer) throws IOException {
     if (getModules().values().size() > 0) {
-      for (Module module : getModules().values().stream().filter(m -> m.isExport()).collect(Collectors.toList())) {
-        writer.write("export * from './" + String.join(File.separator, module.getPackagePath()) + "';\n");
+      List<Module> sortedModules = new ArrayList<>(getModules().values().stream().filter(m -> m.isExport()).collect(Collectors.toSet()));
+      Collections.sort(sortedModules, Comparator.comparing(Module::getFullyQualifiedName));
+
+      for (Module module : sortedModules) {
+        writer.write("import * as " + module.getDefName() + " from './" +
+            module.getPackagePath()[module.getPackagePath().length - 1] + "';\n");
       }
-      writer.write("\n");
+      writer.write("\nexport {\n");
+      int row = 0;
+      for (Module module : sortedModules) {
+        if (row > 0) {
+          writer.write(",\n");
+        }
+        writer.write("  " + module.getDefName());
+        row++;
+      }
+      writer.write("\n};\n");
     }
 
     if (getNamedTypes().values().size() > 0) {
+      Collection<AbstractNamedType> uniqueNamedTypes = getNamedTypes().values().stream()
+          .collect(toMap(v -> v.getDefName(), Function.identity(), (i1, i2) -> i1)).values();
+      List<AbstractNamedType> sortedNameTypes = new ArrayList<>(uniqueNamedTypes);
+      Collections.sort(sortedNameTypes, Comparator.comparing(AbstractNamedType::getDefName));
 
-      for (AbstractNamedType type : getNamedTypes().values()) {
+      for (AbstractNamedType type : sortedNameTypes) {
         writer.write("import { " + type.getDefName() +
             " } from './" + type.getFileName().replaceAll("\\.ts$", "") + "';\n");
       }
       writer.write("\n");
 
-      Iterator<AbstractNamedType> namedTypes = getNamedTypes().values().iterator();
+      Iterator<AbstractNamedType> namedTypes = sortedNameTypes.iterator();
 
       writer.write("export {\n");
       while (namedTypes.hasNext()) {

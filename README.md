@@ -5,7 +5,7 @@ corresponding DTO models found for a given project using the [JAX-RS](https://ja
 For each Java file, the plugin generates a corresponding `.ts` file using the same folder structure the Java uses.
 Each `.ts` file is imported into a submodule, `index.ts` file.  Each submodule is then exported from the main `index.ts` file barrel style.
 
-The code generated targets the Angular 6 API.
+The code generated targets the Angular 7 API.
 
 # Goals
 
@@ -21,7 +21,7 @@ mvn java2typescript:generate
 
 | Name               | Default value              | Description                          |
 |-------------------:|:--------------------------:|:-------------------------------------|
-| restServiceBaseDir |  -                         | Class of REST service                |
+| restServiceBaseDir |                            | Array of file paths                  |
 | prefix             |  -                         | Prefix to add to exported interfaces and REST resource classes.        |
 | contextUrl         |  -                         | The base context URL of the REST API |
 | tsOutPath          | ${project.build.directory} | Path to output folder for ts file    |
