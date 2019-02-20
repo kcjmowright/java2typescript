@@ -15,4 +15,8 @@ abstract public class AbstractPrimitiveType extends AbstractType {
   public void write(Writer writer) throws IOException {
     writer.write(token);
   }
+
+  public String getToken() {
+    return token;
+  }
 }

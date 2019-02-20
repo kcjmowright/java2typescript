@@ -22,6 +22,17 @@ import java2typescript.jackson.module.grammar.base.AbstractType;
 import java.io.Writer;
 
 public class Param extends AbstractType {
+
+  public Param() {
+    super();
+  }
+
+//  public Param(String name, ParamType type) {
+//    this();
+//    this.name = name;
+//    this.type = type;
+//  }
+
   private String name;
   private ParamType type;
   private boolean context = false;

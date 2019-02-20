@@ -17,6 +17,7 @@ package java2typescript.jackson.module.grammar;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Objects;
 
 import java2typescript.jackson.module.grammar.base.AbstractType;
 
@@ -50,4 +51,23 @@ public class MapType extends AbstractType {
     this.keyType = keyType;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    MapType mapType = (MapType) o;
+    return Objects.equals(valueType, mapType.valueType) && Objects.equals(keyType, mapType.keyType);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(getClass().hashCode(), valueType, keyType);
+  }
 }

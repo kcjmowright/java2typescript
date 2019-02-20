@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -123,11 +124,11 @@ abstract public class AbstractNamedType extends AbstractType {
       return false;
     }
     AbstractNamedType that = (AbstractNamedType) o;
-    return name.equalsIgnoreCase(that.name) && Objects.equals(prefix, that.prefix);
+    return name.equals(that.name) && Arrays.equals(packagePath, that.packagePath);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, prefix);
+    return 31 * Objects.hash(name) + Arrays.hashCode(packagePath);
   }
 }

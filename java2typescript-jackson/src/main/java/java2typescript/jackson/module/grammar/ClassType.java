@@ -21,7 +21,7 @@ import java2typescript.jackson.module.grammar.base.AbstractType;
 public class ClassType extends AbstractNamedType {
 
   private Map<String, AbstractType> fields = new LinkedHashMap<>();
-  private Map<String, FunctionType> methods = new LinkedHashMap<>();
+  private Map<String, List<FunctionType>> methods = new LinkedHashMap<>();
   private Map<String, GenericType> generics = new LinkedHashMap<>();
 
   /**
@@ -66,11 +66,13 @@ public class ClassType extends AbstractNamedType {
         throw new RuntimeException(e);
       }
     });
-    getMethods().keySet().stream().sorted().forEach(methodName -> {
+    methods.keySet().stream().sorted().forEach(methodName -> {
       try {
-        writer.write("  " + methodName);
-        this.methods.get(methodName).writeNonLambda(writer);
-        writer.write(";\n");
+        for (FunctionType functionType: this.methods.get(methodName)) {
+          writer.write("  " + methodName);
+          functionType.writeNonLambda(writer);
+          writer.write(";\n");
+        }
       } catch(IOException e) {
         throw new RuntimeException(e);
       }
@@ -82,8 +84,15 @@ public class ClassType extends AbstractNamedType {
     return fields;
   }
 
-  public Map<String, FunctionType> getMethods() {
+  public Map<String, List<FunctionType>> getMethods() {
     return methods;
+  }
+
+  public void addMethod(String methodName, FunctionType functionType) {
+    if (functionType == null) {
+      return;
+    }
+    methods.computeIfAbsent(methodName, (k) -> new ArrayList<>()).add(functionType);
   }
 
   public String getGenericTypesSignature() {
@@ -138,12 +147,15 @@ public class ClassType extends AbstractNamedType {
       return include;
     }).forEach(v -> pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, v)));
 
-    getMethods().values().stream().forEach(m -> {
-      m.getParameters().values().stream()
-          .forEach(v -> pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, v)));
-      pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, m.getResultType()));
+    methods.values().stream().forEach(functionTypes -> {
+      for (FunctionType m: functionTypes) {
+        m.getParameters().values().stream()
+            .forEach(v -> pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, v)));
+        pathResolver.setupImport(imports, packagePathList1, pathResolver.resolveNamedType(imports, m.getResultType()));
+      }
     });
     return imports;
   }
+
 
 }

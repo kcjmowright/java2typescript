@@ -11,6 +11,7 @@ import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.Transient;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -139,7 +140,7 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
       String name = "param" + i;
       function.getParameters().put(name, getTSTypeForClass(param));
     }
-    this.type.getMethods().put(method.getName(), function);
+    this.type.addMethod(method.getName(), function);
   }
 
   @Override

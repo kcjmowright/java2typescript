@@ -5,6 +5,10 @@ import java.io.Writer;
 
 public abstract class AbstractType implements Cloneable {
 
+  public AbstractType() {
+    super();
+  }
+
   public abstract void write(Writer writer) throws IOException;
 
   public Object clone() throws CloneNotSupportedException {

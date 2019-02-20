@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import java2typescript.jackson.module.Dasherize;
 import java2typescript.jackson.module.grammar.base.AbstractNamedType;
 
 public class EnumType extends AbstractNamedType {

@@ -47,7 +47,6 @@ import static java2typescript.jaxrs.model.ParamType.PATH;
 import static java2typescript.jaxrs.model.ParamType.QUERY;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -143,9 +142,7 @@ public class ServiceDescriptorGenerator {
       for (Method method : clazz.getDeclaredMethods()) {
         if (Modifier.isPublic(method.getModifiers())) {
           RestMethod restMethod = generateMethod(method);
-          if(restMethod != null) {
-            service.getRestMethods().put(restMethod.getName(), restMethod);
-          }
+          service.addRestMethod(restMethod);
         }
       }
       services.add(service);
@@ -224,7 +221,7 @@ public class ServiceDescriptorGenerator {
     if (restMethod.getHttpMethod() == null) {
       return null;
     }
-    restMethod.setParams(generateParams(method));
+    restMethod.getParams().addAll(generateParams(method));
     Produces producesAnnotation = method.getAnnotation(Produces.class);
     if (producesAnnotation != null) {
       restMethod.setProducesContentType(producesAnnotation.value()[0]);
@@ -314,33 +311,35 @@ public class ServiceDescriptorGenerator {
    * @param classDef
    */
   private void decorateParamNames(AngularRestService module, ClassType classDef) {
-
     // Loop on methods of the service
-    for (RestMethod restMethod : module.getRestMethods().values()) {
-      FunctionType function = classDef.getMethods().get(restMethod.getName());
+    for (List<RestMethod> restMethods : module.getRestMethods().values()) {
+      for (int k = 0; k < restMethods.size(); k++) {
+        RestMethod restMethod = restMethods.get(k);
+        FunctionType function = classDef.getMethods().get(restMethod.getName()).get(k);
 
-      if (function == null) {
-        continue;
-      }
-      // Copy ordered list of param types
-      List<AbstractType> types = new ArrayList<>();
-      if (function.getParameters() != null && function.getParameters().values() != null) {
-        types.addAll(function.getParameters().values());
-        function.getParameters().clear();
-      }
-
-      for (int i = 0; i < restMethod.getParams().size(); i++) {
-        Param param = restMethod.getParams().get(i);
-        // Skip @Context parameters
-        if (!param.isContext()) {
-          function.getParameters().put(param.getName(), types.get(i));
+        if (function == null) {
+          continue;
         }
-      }
+        // Copy ordered list of param types
+        List<AbstractType> types = new ArrayList<>();
+        if (function.getParameters() != null && function.getParameters().values() != null) {
+          types.addAll(function.getParameters().values());
+          function.getParameters().clear();
+        }
 
-      if (! (function.getResultType() instanceof VoidType)) {
-        function.setResultType(new AngularObservableType(function.getResultType()));
-      } else {
-        function.setResultType(new AngularObservableType(AnyType.getInstance()));
+        for (int i = 0; i < restMethod.getParams().size(); i++) {
+          Param param = restMethod.getParams().get(i);
+          // Skip @Context parameters
+          if (!param.isContext()) {
+            function.getParameters().put(param.getName(), types.get(i));
+          }
+        }
+
+        if (! (function.getResultType() instanceof VoidType)) {
+          function.setResultType(new AngularObservableType(function.getResultType()));
+        } else {
+          function.setResultType(new AngularObservableType(AnyType.getInstance()));
+        }
       }
     }
   }
