@@ -1,19 +1,3 @@
-/*******************************************************************************
- * Copyright 2013 Raphael Jolivet
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
-
 package java2typescript.jaxrs.model;
 
 import static java.lang.String.format;
@@ -185,6 +169,9 @@ public class RestMethod extends FunctionType {
       }
       writer.write(">(urlTmpl, {\n");
       writer.write("      params: params,\n");
+      writer.write("      headers: {\n");
+      writer.write("        Accept: 'application/json'\n");
+      writer.write("      },\n");
       writer.write("      responseType: 'json'\n");
     } else if ("text/plain".equalsIgnoreCase(getProducesContentType())) {
       writer.write("    return this.http.get(urlTmpl, {\n");
@@ -203,19 +190,15 @@ public class RestMethod extends FunctionType {
     ((AngularObservableType)functionType.getResultType()).getType().write(writer);
     writer.write(">(urlTmpl, ");
 
-    String postBody = "null";
-
-    for (Param param: getParams()) {
-      if (param.getType() == ParamType.BODY){
-        postBody = param.getName();
-        break;
-      }
-    }
+    String postBody = evaluateBody();
 
     writer.write(format("%s, {\n      params: params,\n", postBody));
 
     if (!(functionType.getResultType() instanceof VoidType)) {
       if ("application/json".equalsIgnoreCase(getProducesContentType())) {
+        writer.write("      headers: {\n");
+        writer.write("        Accept: 'application/json'\n");
+        writer.write("      },\n");
         writer.write("      responseType: 'json'\n");
       } else {
         writer.write("      responseType: 'blob'\n");
@@ -239,19 +222,15 @@ public class RestMethod extends FunctionType {
     }
     writer.write(">(urlTmpl, ");
 
-    String putBody = "null";
-
-    for (Param param: getParams()) {
-      if (param.getType() == ParamType.BODY){
-        putBody = param.getName();
-        break;
-      }
-    }
+    String putBody = evaluateBody();
 
     writer.write(format("%s, {\n      params: params", putBody));
     if (!(functionType.getResultType() instanceof VoidType)) {
       if (isJson) {
-        writer.write(",\n      responseType: 'json'");
+        writer.write(",\n      headers: {\n");
+        writer.write("        Accept: 'application/json'\n");
+        writer.write("      },\n");
+        writer.write("      responseType: 'json'");
       }
     }
     writer.write("\n    });\n");
@@ -262,6 +241,18 @@ public class RestMethod extends FunctionType {
     writer.write("      params: params,\n");
     writer.write("      responseType: 'json'\n");
     writer.write("    });\n");
+  }
+
+  private String evaluateBody() {
+    String putBody = "null";
+
+    for (Param param: getParams()) {
+      if (param.getType() == ParamType.BODY){
+        putBody = param.getName();
+        break;
+      }
+    }
+    return putBody;
   }
 
 }
