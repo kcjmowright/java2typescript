@@ -73,6 +73,9 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
         "equals".equalsIgnoreCase(method.getName()) ||
         "hashCode".equalsIgnoreCase(method.getName())) {
       ignorable = true;
+    } else if (!Arrays.asList(beanInfo.getMethodDescriptors()).stream().anyMatch(md -> md.getMethod().equals(method))) {
+      // If method is not part of this bean but rather part of the super class.
+      ignorable = true;
     } else {
       boolean annotated = Arrays.stream(method.getAnnotations()).anyMatch(annotation -> (
           "@javax.ws.rs.GET()".equalsIgnoreCase(annotation.toString()) ||
