@@ -37,7 +37,7 @@ Add something like the following to your REST interface module's pom.xml:
             <plugin>
                 <groupId>java2typescript</groupId>
                 <artifactId>java2typescript-maven-plugin</artifactId>
-                <version>2.0.0</version>
+                <version>2.0.1</version>
                 <configuration>
                     <tsOutPath>${project.build.directory}/generated/typescript</tsOutPath>
                     <restServiceBaseDir>src/main/java/com/my/rest</restServiceBaseDir>

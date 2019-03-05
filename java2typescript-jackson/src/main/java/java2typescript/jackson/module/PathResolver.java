@@ -30,7 +30,7 @@ public class PathResolver {
   public AbstractNamedType resolveNamedType(Map<AbstractNamedType, String> imports, AbstractType abstractType) {
     if(abstractType instanceof AngularObservableType) {
       AngularObservableType observable = (AngularObservableType) abstractType;
-      imports.put(observable, "rxjs/Observable");
+      imports.put(observable, "rxjs");
       return resolveNamedType(imports, observable.getType());
     } else if (abstractType instanceof AbstractNamedType) {
       return (AbstractNamedType) abstractType;
