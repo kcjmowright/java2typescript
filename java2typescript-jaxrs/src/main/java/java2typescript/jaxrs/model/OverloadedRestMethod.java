@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import java2typescript.jackson.module.grammar.FunctionType;
+import java2typescript.jackson.module.grammar.FunctionTypeComparator;
 import java2typescript.jackson.module.grammar.base.AbstractPrimitiveType;
 import java2typescript.jackson.module.grammar.base.AbstractType;
 
@@ -52,15 +53,7 @@ public class OverloadedRestMethod extends AbstractType {
       functionTypesToRestMethodMap.put(functionTypes.get(i), restMethods.get(i));
     }
 
-    functionTypes = functionTypes.stream().sorted((a, b) -> {
-      int aSize = a.getParameters().size();
-      int bSize = b.getParameters().size();
-
-      if (aSize == bSize) {
-        return 0;
-      }
-      return aSize > bSize ? -1 : 1;
-    }).collect(toList());
+    functionTypes = functionTypes.stream().sorted(new FunctionTypeComparator()).collect(toList());
 
     for (FunctionType functionType: functionTypes) {
       addParametersToCollection(functionType.getParameters().entrySet(), functionsParameterNames, functionsParameters);

@@ -68,7 +68,7 @@ public class ClassType extends AbstractNamedType {
     });
     methods.keySet().stream().sorted().forEach(methodName -> {
       try {
-        for (FunctionType functionType: this.methods.get(methodName)) {
+        for (FunctionType functionType: this.methods.get(methodName).stream().sorted(new FunctionTypeComparator()).collect(Collectors.toList())) {
           writer.write("  " + methodName);
           functionType.writeNonLambda(writer);
           writer.write(";\n");

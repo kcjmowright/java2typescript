@@ -99,19 +99,9 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
 
     if (namedType == null) {
       Class clazz = javaType.getRawClass();
-      Class enclosingClass = clazz.getEnclosingClass();
       visitor = new TSJsonObjectFormatVisitor(this, className, clazz);
       type = visitor.getType();
-
-      //if (enclosingClass == null) {
-        getModule(names[0]).getNamedTypes().put(visitor.getType().getName(), visitor.getType());
-//      } else {
-//        AbstractNamedType enclosingClassType = getEnclosingClassType(moduleName, enclosingClass);
-//        if (enclosingClassType != null) {
-//          enclosingClassType.getInnerTypes().add((AbstractNamedType)type);
-//          ((AbstractNamedType)type).setEnclosingType(enclosingClassType);
-//        }
-//      }
+      getModule(names[0]).getNamedTypes().put(visitor.getType().getName(), visitor.getType());
       visitor.addPublicMethods();
     } else {
       type = namedType;
