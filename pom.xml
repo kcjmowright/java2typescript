@@ -2,17 +2,17 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>java2typescript</groupId>
     <artifactId>java2typescript</artifactId>
-    <version>2.0.2</version>
+    <version>3.0.0</version>
     <packaging>pom</packaging>
     <name>java2typescript</name>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <jackson.version>2.6.1</jackson.version>
-        <guava.version>23.0</guava.version>
-        <cxf.version>3.1.2</cxf.version>
-        <maven.version>3.4</maven.version>
+        <guava.version>28.0-jre</guava.version>
+        <cxf.version>3.3.3</cxf.version>
+        <maven.version>3.6.0</maven.version>
         <skipFindBugs>false</skipFindBugs>
     </properties>
 
@@ -79,6 +79,11 @@
             <dependency>
                 <groupId>org.apache.maven.plugin-tools</groupId>
                 <artifactId>maven-plugin-annotations</artifactId>
+                <version>${maven.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
                 <version>${maven.version}</version>
             </dependency>
             <dependency>
