@@ -4,7 +4,7 @@
     <parent>
         <groupId>java2typescript</groupId>
         <artifactId>java2typescript</artifactId>
-        <version>2.0.2</version>
+        <version>3.0.0</version>
     </parent>
 
     <artifactId>sample-web-app</artifactId>
