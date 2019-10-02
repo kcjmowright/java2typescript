@@ -58,8 +58,13 @@ public class ClassType extends AbstractNamedType {
     }
     writer.write(format("export interface %s%s {\n", getDefName(), getGenericTypesSignature()));
     fields.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> {
+      String key = entry.getKey();
+
+      if (methods.keySet().contains(key)) {
+        key = "_" + key;
+      }
       try {
-        writer.write(format("  %s?: ", entry.getKey()));
+        writer.write(format("  %s?: ", key));
         entry.getValue().write(writer);
         writer.write(";\n");
       } catch(IOException e) {

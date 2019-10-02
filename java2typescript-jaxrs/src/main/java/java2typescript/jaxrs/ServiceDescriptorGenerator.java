@@ -162,7 +162,7 @@ public class ServiceDescriptorGenerator {
     Collection<AngularRestService> restServices = generateRestServices(classes, prefix, contextUrl, contextToken);
 
     for (AngularRestService restService : restServices) {
-      Module module = findModule(mainModule, restService.getPackagePath());// mainModule.getModules().get(String.join(".", restService.getPackagePath()));
+      Module module = findModule(mainModule, restService.getPackagePath());
       module.setExport(true);
       AbstractNamedType abstractNamedType = module.getNamedTypes().get(restService.getFullyQualifiedName());
       if (abstractNamedType instanceof ClassType) {

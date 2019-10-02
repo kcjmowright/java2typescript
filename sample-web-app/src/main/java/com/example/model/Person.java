@@ -4,18 +4,21 @@ public class Person {
 	private String email;
 	private String firstName;
 	private String lastName;
-		
+	private String user;
+
 	public Person() {
 	}
 	
 	public Person( final String email ) {
 		this.email = email;
 	}
-	
+
 	public Person( final String firstName, final String lastName ) {
 		this.firstName = firstName;
 		this.lastName = lastName;
 	}
+
+	public String user() { return this.user; }
 
 	public String getEmail() {
 		return email;
