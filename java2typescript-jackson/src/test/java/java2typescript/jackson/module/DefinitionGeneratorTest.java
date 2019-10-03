@@ -27,8 +27,10 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
@@ -96,7 +98,7 @@ public class DefinitionGeneratorTest {
   private void writeModule(Writer out, Module module) {
     try {
       module.writeDef(out);
-      for (AbstractNamedType type : module.getNamedTypes().values()) {
+      for (AbstractNamedType type : module.getNamedTypes().values().stream().sorted(Comparator.comparing(AbstractNamedType::getDefName)).collect(Collectors.toList())) {
         out.write("\n");
         out.write(type.getFullyQualifiedName());
         out.write("\n");

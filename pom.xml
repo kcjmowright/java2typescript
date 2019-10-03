@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>java2typescript</groupId>
     <artifactId>java2typescript</artifactId>
-    <version>3.0.1</version>
+    <version>3.0.2</version>
     <packaging>pom</packaging>
     <name>java2typescript</name>
 
@@ -94,7 +94,7 @@
             <dependency>
                 <groupId>com.google.code.findbugs</groupId>
                 <artifactId>findbugs</artifactId>
-                <version>3.0.1</version>
+                <version>3.0.2</version>
             </dependency>
 
             <!-- Test Dependencies -->
@@ -112,7 +112,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
-                <version>3.0.2</version>
+                <version>3.0.1</version>
                 <configuration>
                     <failOnError>false</failOnError>
                     <effort>Max</effort>

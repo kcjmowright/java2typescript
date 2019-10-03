@@ -40,7 +40,15 @@ public class ClassType extends AbstractNamedType {
   public void writeDef(Writer writer) throws IOException {
     Map<AbstractNamedType, String> imports = resolveImports();
     if (imports.size() > 0) {
-      imports.entrySet().stream().sorted(Entry.comparingByKey(Comparator.comparing(AbstractNamedType::getDefName))).forEach(entry -> {
+      imports.entrySet()
+          .stream()
+          .filter(es -> {
+            final String fqn = es.getKey().getFullyQualifiedName();
+            return !fqn.equals(this.getFullyQualifiedName())
+                && getInnerTypes().stream().noneMatch(t -> fqn.equals(t.getFullyQualifiedName()));
+          })
+          .sorted(Entry.comparingByKey(Comparator.comparing(AbstractNamedType::getDefName)))
+          .forEach(entry -> {
         try {
           writer.write("import { " + entry.getKey().getDefName() + " } from '" + entry.getValue() + "';\n");
         } catch(IOException e) {
