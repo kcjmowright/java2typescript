@@ -9,7 +9,6 @@ import java2typescript.jackson.module.grammar.AnyType;
 import java2typescript.jackson.module.grammar.ArrayType;
 import java2typescript.jackson.module.grammar.BooleanType;
 import java2typescript.jackson.module.grammar.FunctionType;
-import java2typescript.jackson.module.grammar.VoidType;
 import java2typescript.jackson.module.grammar.base.AbstractType;
 
 import java.io.IOException;
@@ -26,7 +25,8 @@ public class RestMethod extends FunctionType {
   private List<Param> params = new ArrayList();
   private Map<String, Param> pathParams = new LinkedHashMap<>();
   private HttpMethod httpMethod;
-  private String producesContentType = "application/json";
+  private MediaType producesContentType = MediaType.JSON;
+  private MediaType consumesContentType = MediaType.JSON;
 
   public String getPath() {
     return path;
@@ -57,12 +57,20 @@ public class RestMethod extends FunctionType {
     this.httpMethod = httpMethod;
   }
 
-  public void setProducesContentType(String contentType) {
-    this.producesContentType = contentType;
+  public void setProducesContentType(MediaType mediaType) {
+    this.producesContentType = mediaType;
   }
 
-  public String getProducesContentType() {
+  public MediaType getProducesContentType() {
     return this.producesContentType;
+  }
+
+  public void setConsumesContentType(MediaType mediaType) {
+    this.consumesContentType = mediaType;
+  }
+
+  public MediaType getConsumesContentType() {
+    return this.consumesContentType;
   }
 
   public void write(FunctionType functionType, Writer writer, String basePath, boolean isPublic) {
@@ -70,7 +78,7 @@ public class RestMethod extends FunctionType {
       String visibility = isPublic ? "public" : "private";
       // Method signature
       writer.write("  " + visibility + " " + getName());
-      if (getHttpMethod() == HttpMethod.DELETE || "text/plain".equalsIgnoreCase(getProducesContentType())) {
+      if (getHttpMethod() == HttpMethod.DELETE || MediaType.TEXT.equals(getProducesContentType())) {
         functionType = (FunctionType)functionType.clone();
         functionType.setResultType(AnyType.getInstance());
       }
@@ -98,7 +106,7 @@ public class RestMethod extends FunctionType {
 
       int queryParamCount = 0;
       for (Param param : getParams()) {
-        if (param.getType() == ParamType.QUERY) {
+        if (param.getType() == ParamType.QUERY || param.getType() == ParamType.FORM) {
           if (queryParamCount++ > 0) {
             writer.write(",\n");
           }
@@ -140,14 +148,17 @@ public class RestMethod extends FunctionType {
       }
       writer.write(format("    const urlTmpl = `${this.context}%s%s`;\n\n", basePath, path));
 
-      if (getHttpMethod() == HttpMethod.GET) {
+      HttpMethod httpMethod = getHttpMethod();
+      if (httpMethod == HttpMethod.GET) {
         writeGet(writer, functionType);
-      } else if (getHttpMethod() == HttpMethod.POST) {
-        writePost(writer, functionType);
-      } else if (getHttpMethod() == HttpMethod.PUT) {
-        writePut(writer, functionType);
-      } else if (getHttpMethod() == HttpMethod.DELETE) {
+      } else if (httpMethod == HttpMethod.POST) {
+        writePutOrPost(writer, functionType, false);
+      } else if (httpMethod == HttpMethod.PUT) {
+        writePutOrPost(writer, functionType, true);
+      } else if (httpMethod == HttpMethod.DELETE) {
         writeDelete(writer);
+      } else {
+        throw new IllegalStateException(String.format("Unsupported HttpMethod %s", httpMethod));
       }
 
       writer.write("  }\n\n");
@@ -158,7 +169,7 @@ public class RestMethod extends FunctionType {
   }
 
   private void writeGet(Writer writer, FunctionType functionType) throws IOException {
-    if ("application/json".equalsIgnoreCase(getProducesContentType()) ||
+    if (MediaType.JSON.equals(getProducesContentType()) ||
         ( functionType.getResultType() instanceof AngularObservableType && (((AngularObservableType)functionType.getResultType()).getType() instanceof BooleanType))) {
       writer.write("    return this.http.get<");
       AbstractType resultType = functionType.getResultType();
@@ -173,7 +184,7 @@ public class RestMethod extends FunctionType {
       writer.write("        Accept: 'application/json'\n");
       writer.write("      },\n");
       writer.write("      responseType: 'json'\n");
-    } else if ("text/plain".equalsIgnoreCase(getProducesContentType())) {
+    } else if (MediaType.TEXT.equals(getProducesContentType())) {
       writer.write("    return this.http.get(urlTmpl, {\n");
       writer.write("      params: params,\n");
       writer.write("      responseType: 'text'\n");
@@ -185,54 +196,25 @@ public class RestMethod extends FunctionType {
     writer.write("    });\n");
   }
 
-  private void writePost(Writer writer, FunctionType functionType) throws IOException {
-    writer.write("    return this.http.post<");
-    ((AngularObservableType)functionType.getResultType()).getType().write(writer);
-    writer.write(">(urlTmpl, ");
-
-    String postBody = evaluateBody();
-
-    writer.write(format("%s, {\n      params: params,\n", postBody));
-
-    if (!(functionType.getResultType() instanceof VoidType)) {
-      if ("application/json".equalsIgnoreCase(getProducesContentType())) {
-        writer.write("      headers: {\n");
-        writer.write("        Accept: 'application/json'\n");
-        writer.write("      },\n");
-        writer.write("      responseType: 'json'\n");
-      } else {
-        writer.write("      responseType: 'blob'\n");
-      }
-    }
-    writer.write("    });\n");
-  }
-
-  private void writePut(Writer writer, FunctionType functionType) throws IOException {
-    boolean isJson = "application/json".equalsIgnoreCase(getProducesContentType());
-    boolean isXml = "application/xml".equalsIgnoreCase(getProducesContentType());
-    boolean isText = "text/plain".equalsIgnoreCase(getProducesContentType());
-
-    writer.write("    return this.http.put<");
-    if (isJson || isXml) {
-      ((AngularObservableType) functionType.getResultType()).getType().write(writer);
-    } else if (isText) {
-      writer.write("any");
-    } else {
-      writer.write("Blob");
-    }
-    writer.write(">(urlTmpl, ");
-
+  private void writePutOrPost(Writer writer, FunctionType functionType, boolean put) throws IOException {
+    MediaType producesType = getProducesContentType();
+    MediaType consumesType = getConsumesContentType();
     String putBody = evaluateBody();
-
-    writer.write(format("%s, {\n      params: params", putBody));
-    if (!(functionType.getResultType() instanceof VoidType)) {
-      if (isJson) {
-        writer.write(",\n      headers: {\n");
-        writer.write("        Accept: 'application/json'\n");
-        writer.write("      },\n");
-        writer.write("      responseType: 'json'");
-      }
+    String returnType;
+    if (MediaType.JSON.equals(producesType) || MediaType.XML.equals(producesType)) {
+      returnType = ((AngularObservableType) functionType.getResultType()).getType().toJS();
+    } else if (MediaType.TEXT.equals(producesType)) {
+      returnType = "any";
+    } else {
+      returnType = "Blob";
     }
+
+    writer.write(String.format("    return this.http.%s<%s>(urlTmpl, %s, {", put ? "put" : "post", returnType, putBody));
+    writer.write("\n      params: params,");
+    writer.write("\n      headers: {");
+    writer.write(String.format("\n        Accept: '%s',", producesType.getMime()));
+    writer.write(String.format("\n        'Content-Type': '%s'", consumesType.getMime()));
+    writer.write("\n      }");
     writer.write("\n    });\n");
   }
 

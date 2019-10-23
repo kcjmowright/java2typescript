@@ -17,6 +17,7 @@
 package java2typescript.jaxrs;
 
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -35,6 +36,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
+import java.nio.charset.MalformedInputException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -58,6 +60,7 @@ import com.google.common.base.CaseFormat;
 import java2typescript.jackson.module.DefinitionGenerator;
 import java2typescript.jackson.module.grammar.AnyType;
 import java2typescript.jaxrs.model.AngularRestService;
+import java2typescript.jaxrs.model.MediaType;
 import java2typescript.jaxrs.model.ServerUrlContextService;
 import java2typescript.jaxrs.model.HttpMethod;
 import java2typescript.jaxrs.model.Param;
@@ -224,7 +227,15 @@ public class ServiceDescriptorGenerator {
     restMethod.getParams().addAll(generateParams(method));
     Produces producesAnnotation = method.getAnnotation(Produces.class);
     if (producesAnnotation != null) {
-      restMethod.setProducesContentType(producesAnnotation.value()[0]);
+      restMethod.setProducesContentType(MediaType.of(producesAnnotation.value()[0]));
+    } else {
+      restMethod.setProducesContentType(MediaType.JSON);
+    }
+    Consumes consumesAnnotation = method.getAnnotation(Consumes.class);
+    if (consumesAnnotation != null) {
+      restMethod.setConsumesContentType(MediaType.of(consumesAnnotation.value()[0]));
+    } else {
+      restMethod.setConsumesContentType(MediaType.JSON);
     }
     return restMethod;
   }
