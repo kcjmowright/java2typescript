@@ -94,7 +94,7 @@ public class RestMethod extends FunctionType {
           if (pathParamCount++ > 0) {
             writer.write(",\n");
           }
-          writer.write(format("      %s: '' + %s", param.getName(), param.getName()));
+          writer.write(format("      %s: encodeURIComponent('' + %s)", param.getName(), param.getName()));
         } else if (param.getType() == ParamType.BEAN) {
           hasBeanParams = true;
         }
@@ -107,18 +107,22 @@ public class RestMethod extends FunctionType {
       int queryParamCount = 0;
       for (Param param : getParams()) {
         if (param.getType() == ParamType.QUERY || param.getType() == ParamType.FORM) {
+          final String paramName = param.getName();
           if (queryParamCount++ > 0) {
             writer.write(",\n");
           }
-          AbstractType paramType = functionType.getParameters().get(param.getName());
+          AbstractType paramType = functionType.getParameters().get(paramName);
           if (paramType instanceof ArrayType) {
-            writer.write(format("        %s: %s.map(v => '' + v)", param.getName(), param.getName()));
+            writer.write(format("      %s: %s === undefined ? undefined : %s.map(v => '' + v)", paramName, paramName, paramName));
           } else {
-            writer.write(format("        %s: '' + %s", param.getName(), param.getName()));
+            writer.write(format("      %s: %s === undefined ? undefined : '' + %s", paramName, paramName, paramName));
           }
         }
       }
-      writer.write("\n    };\n");
+      if (queryParamCount > 0) {
+        writer.write("\n");
+      }
+      writer.write("    };\n");
 
       // Bean Params
       if (hasBeanParams) {
@@ -133,11 +137,9 @@ public class RestMethod extends FunctionType {
         }
       }
 
-      writer.write("\n");
-
       String path = getPath()
-          .replace("{","${encodeURIComponent(pathParams.")
-          .replace("}", ")}")
+          .replace("{","${pathParams.")
+          .replace("}", "}")
           .trim();
 
       if (!path.startsWith("/")) {
