@@ -102,27 +102,20 @@ public class RestMethod extends FunctionType {
       writer.write("\n    };\n");
 
       // Query Params
-      writer.write("    const params = {\n");
-
-      int queryParamCount = 0;
+      writer.write("    let params: any = {};\n");
       for (Param param : getParams()) {
         if (param.getType() == ParamType.QUERY || param.getType() == ParamType.FORM) {
           final String paramName = param.getName();
-          if (queryParamCount++ > 0) {
-            writer.write(",\n");
-          }
           AbstractType paramType = functionType.getParameters().get(paramName);
+          writer.write(format("    if (%s !== undefined) {\n", paramName));
           if (paramType instanceof ArrayType) {
-            writer.write(format("      %s: %s === undefined ? undefined : %s.map(v => '' + v)", paramName, paramName, paramName));
+            writer.write(format("      params.%s = %s.map(v => '' + v);\n", paramName, paramName));
           } else {
-            writer.write(format("      %s: %s === undefined ? undefined : '' + %s", paramName, paramName, paramName));
+            writer.write(format("      params.%s = %s;\n", paramName, paramName));
           }
+          writer.write("    }\n");
         }
       }
-      if (queryParamCount > 0) {
-        writer.write("\n");
-      }
-      writer.write("    };\n");
 
       // Bean Params
       if (hasBeanParams) {
@@ -137,11 +130,7 @@ public class RestMethod extends FunctionType {
         }
       }
 
-      String path = getPath()
-          .replace("{","${pathParams.")
-          .replace("}", "}")
-          .trim();
-
+      String path = getPath().replace("{","${pathParams.").trim();
       if (!path.startsWith("/")) {
         path = "/" + path;
       }
