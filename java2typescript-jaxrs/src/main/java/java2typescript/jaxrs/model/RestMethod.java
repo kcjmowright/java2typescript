@@ -109,7 +109,7 @@ public class RestMethod extends FunctionType {
           AbstractType paramType = functionType.getParameters().get(paramName);
           writer.write(format("    if (%s !== undefined) {\n", paramName));
           if (paramType instanceof ArrayType) {
-            writer.write(format("      params.%s = %s.map(v => '' + v);\n", paramName, paramName));
+            writer.write(format("      params.%s = %s.filter(v => v !== undefined && v !== null).map(v => '' + v);\n", paramName, paramName));
           } else {
             writer.write(format("      params.%s = %s;\n", paramName, paramName));
           }
