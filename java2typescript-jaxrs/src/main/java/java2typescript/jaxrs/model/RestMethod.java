@@ -122,7 +122,7 @@ public class RestMethod extends FunctionType {
         for (Param param : getParams()) {
           if (param.getType() == ParamType.BEAN) {
             writer.write(format("    for ( const key in %s ) {\n", param.getName()));
-            writer.write("      if (key !== undefined && key !== null) {\n");
+            writer.write(format("      if (key !== undefined && key !== null && %s[key] !== undefined) {\n", param.getName()));
             writer.write(format("        params[key] = %s[key];\n", param.getName()));
             writer.write("      }\n");
             writer.write("    }\n");
