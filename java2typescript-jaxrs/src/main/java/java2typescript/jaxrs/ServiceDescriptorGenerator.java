@@ -103,7 +103,7 @@ public class ServiceDescriptorGenerator {
    */
   private class DummySerializer extends JsonSerializer<Object> {
     @Override
-    public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+    public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) {
       // No implementation here
     }
   }

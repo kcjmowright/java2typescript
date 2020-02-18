@@ -29,7 +29,7 @@ public class OverloadedRestMethod extends AbstractType {
   private String basePath;
   private String methodName;
   private List<String> parameterNames = new ArrayList<>();
-  private Set<AbstractType> resultTypes = new HashSet<>();
+  private Set<AbstractType> resultTypes = new LinkedHashSet<>();
 
   private Map<FunctionType, RestMethod> functionTypesToRestMethodMap = new HashMap<>();
   private Map<FunctionType, RestMethod> functionTypesToPrivateRestMethodMap = new HashMap<>();
