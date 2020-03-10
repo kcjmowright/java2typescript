@@ -1,4 +1,4 @@
-package java2typescript.jaxrs;
+package java2typescript.function;
 
 import java.util.List;
 

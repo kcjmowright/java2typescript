@@ -15,6 +15,9 @@
  ******************************************************************************/
 package java2typescript.jackson.module.visitors;
 
+import static java2typescript.jackson.module.grammar.base.JavascriptReservedWords.sanitizeAll;
+import static java2typescript.jackson.module.grammar.base.JavascriptReservedWords.sanitizeJavaName;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -82,10 +85,10 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
     JsonTypeName typeName = type.getRawClass().getAnnotation(JsonTypeName.class);
     // If @JsonTypeName annotation
     if (typeName != null) {
-      retValue = new String[] { null, typeName.value() };
+      retValue = new String[] { null, sanitizeJavaName(typeName.value()) };
     } else { // Java simple name
       Class clazz = type.getRawClass();
-      retValue = new String[] {clazz.getPackage().getName(), clazz.getCanonicalName()};
+      retValue = new String[] { sanitizeJavaName(clazz.getPackage().getName()), sanitizeJavaName(clazz.getCanonicalName())};
     }
     return retValue;
   }
@@ -101,7 +104,7 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
       Class clazz = javaType.getRawClass();
       visitor = new TSJsonObjectFormatVisitor(this, className, clazz);
       type = visitor.getType();
-      getModule(names[0]).getNamedTypes().put(visitor.getType().getName(), visitor.getType());
+      getModule(moduleName).getNamedTypes().put(visitor.getType().getName(), visitor.getType());
       visitor.addPublicMethods();
     } else {
       type = namedType;
@@ -114,7 +117,7 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
     String moduleName = names[0];
     String className = names[1];
     Class enclosingClass = javaType.getRawClass().getEnclosingClass();
-    String[] packagePath = moduleName.split("\\.");
+    String[] packagePath = sanitizeAll(moduleName.split("\\."));
     EnumType enumType = (EnumType)getModule(moduleName).getNamedTypes().get(className);
 
     if (enumType == null) {
@@ -134,7 +137,7 @@ public class TSJsonFormatVisitorWrapper extends ABaseTSJsonFormatVisitor impleme
   }
 
   private AbstractNamedType getEnclosingClassType(String moduleName, Class enclosingClass) throws JsonMappingException {
-    AbstractNamedType enclosingClassType = getModule(moduleName).getNamedTypes().get(enclosingClass.getCanonicalName());
+    AbstractNamedType enclosingClassType = getModule(moduleName).getNamedTypes().get(sanitizeJavaName(enclosingClass.getCanonicalName()));
 
     if (enclosingClassType == null) {
       JavaType javaHint = SimpleType.constructUnsafe(enclosingClass);

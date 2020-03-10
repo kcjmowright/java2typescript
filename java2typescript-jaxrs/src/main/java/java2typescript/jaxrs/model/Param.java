@@ -16,6 +16,8 @@
 
 package java2typescript.jaxrs.model;
 
+import static java2typescript.jackson.module.grammar.base.JavascriptReservedWords.sanitize;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java2typescript.jackson.module.grammar.base.AbstractType;
 
@@ -27,12 +29,6 @@ public class Param extends AbstractType {
     super();
   }
 
-//  public Param(String name, ParamType type) {
-//    this();
-//    this.name = name;
-//    this.type = type;
-//  }
-
   private String name;
   private ParamType type;
   private boolean context = false;
@@ -42,7 +38,7 @@ public class Param extends AbstractType {
   }
 
   public void setName(String name) {
-    this.name = name;
+    this.name = sanitize(name);
   }
 
   public ParamType getType() {

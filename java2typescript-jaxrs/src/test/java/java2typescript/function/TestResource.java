@@ -1,4 +1,4 @@
-package java2typescript.jaxrs;
+package java2typescript.function;
 
 import java.util.UUID;
 
@@ -15,32 +15,36 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-@Path("/domain/{domainId}/test")
+@Path("/domain/{in}/test")
 public interface TestResource {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  AggregationResultDTO findEvents(@PathParam("domainId") int domainId, @BeanParam() TestDTO search, @BeanParam PagingSortDTO s);
+  AggregationResultDTO findEvents(@PathParam("in") int in, @BeanParam() TestDTO search, @BeanParam PagingSortDTO s);
 
   @Path("/all")
   @GET
   @Produces({MediaType.APPLICATION_JSON})
-  SearchResultDTO<AggregationResultDTO> findAll(@PathParam("domainId") int domainId,
+  SearchResultDTO<AggregationResultDTO> findAll(@PathParam("in") int domainId,
       @BeanParam TestDTO search, @QueryParam("includeParts") @DefaultValue("true") boolean includeParts,
       @QueryParam("includeCounts") @DefaultValue("false") boolean includeCounts);
 
   @POST
   @Consumes({MediaType.APPLICATION_JSON})
   @Produces({MediaType.APPLICATION_JSON})
-  AggregationResultDTO create(@PathParam("domainId") int domainId, AggregationResultDTO dto);
+  AggregationResultDTO create(@PathParam("in") int in, AggregationResultDTO dto);
 
   @PUT
   @Path("/{id}")
   @Consumes({MediaType.APPLICATION_JSON})
-  void update(@PathParam("domainId") int domainId, @PathParam("id") UUID id, TestDTO dto);
+  void update(@PathParam("in") int domainId, @PathParam("id") UUID id, TestDTO dto);
 
   @DELETE
   @Path("/{id}")
-  void delete(@PathParam("domainId") int domainId, @PathParam("id") UUID id);
+  void delete(@PathParam("in") int domainId, @PathParam("id") UUID id);
+
+  @Path("/in")
+  @GET
+  void in(@PathParam("in") int in);
 
 }

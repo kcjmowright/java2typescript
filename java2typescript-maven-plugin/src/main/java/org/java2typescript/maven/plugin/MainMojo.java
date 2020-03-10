@@ -1,13 +1,8 @@
 package org.java2typescript.maven.plugin;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,8 +24,6 @@ import org.apache.maven.project.MavenProject;
 
 import java2typescript.jackson.module.grammar.Module;
 import java2typescript.jaxrs.ServiceDescriptorGenerator;
-
-import com.google.common.base.CaseFormat;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 

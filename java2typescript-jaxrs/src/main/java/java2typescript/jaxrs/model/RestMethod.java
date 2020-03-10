@@ -2,6 +2,8 @@ package java2typescript.jaxrs.model;
 
 import static java.lang.String.format;
 
+import static java2typescript.jackson.module.grammar.base.JavascriptReservedWords.sanitizePath;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java2typescript.jackson.module.grammar.AngularObservableType;
@@ -14,16 +16,13 @@ import java2typescript.jackson.module.grammar.base.AbstractType;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class RestMethod extends FunctionType {
 
   private String name;
   private String path;
   private List<Param> params = new ArrayList();
-  private Map<String, Param> pathParams = new LinkedHashMap<>();
   private HttpMethod httpMethod;
   private MediaType producesContentType = MediaType.JSON;
   private MediaType consumesContentType = MediaType.JSON;
@@ -42,7 +41,7 @@ public class RestMethod extends FunctionType {
   }
 
   public void setPath(String path) {
-    this.path = path;
+    this.path = sanitizePath(path);
   }
 
   public List<Param> getParams() {
@@ -149,7 +148,7 @@ public class RestMethod extends FunctionType {
       } else if (httpMethod == HttpMethod.DELETE) {
         writeDelete(writer);
       } else {
-        throw new IllegalStateException(String.format("Unsupported HttpMethod %s", httpMethod));
+        throw new IllegalStateException(format("Unsupported HttpMethod %s", httpMethod));
       }
 
       writer.write("  }\n\n");
@@ -203,8 +202,8 @@ public class RestMethod extends FunctionType {
     writer.write(String.format("    return this.http.%s<%s>(urlTmpl, %s, {", put ? "put" : "post", returnType, putBody));
     writer.write("\n      params: params,");
     writer.write("\n      headers: {");
-    writer.write(String.format("\n        Accept: '%s',", producesType.getMime()));
-    writer.write(String.format("\n        'Content-Type': '%s'", consumesType.getMime()));
+    writer.write(format("\n        Accept: '%s',", producesType.getMime()));
+    writer.write(format("\n        'Content-Type': '%s'", consumesType.getMime()));
     writer.write("\n      }");
     writer.write("\n    });\n");
   }

@@ -31,17 +31,17 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.io.IOException;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
-import java.nio.charset.MalformedInputException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import static java2typescript.jackson.module.grammar.base.JavascriptReservedWords.sanitizeAll;
 import static java2typescript.jaxrs.model.ParamType.BEAN;
 import static java2typescript.jaxrs.model.ParamType.BODY;
 import static java2typescript.jaxrs.model.ParamType.FORM;
@@ -57,6 +57,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import com.google.common.base.CaseFormat;
 
+import java2typescript.jaxrs.model.RestMethod;
 import java2typescript.jackson.module.DefinitionGenerator;
 import java2typescript.jackson.module.grammar.AnyType;
 import java2typescript.jaxrs.model.AngularRestService;
@@ -64,7 +65,6 @@ import java2typescript.jaxrs.model.MediaType;
 import java2typescript.jaxrs.model.ServerUrlContextService;
 import java2typescript.jaxrs.model.HttpMethod;
 import java2typescript.jaxrs.model.Param;
-import java2typescript.jaxrs.model.RestMethod;
 import java2typescript.jackson.module.grammar.AngularObservableType;
 import java2typescript.jackson.module.grammar.ClassType;
 import java2typescript.jackson.module.grammar.FunctionType;
@@ -130,7 +130,7 @@ public class ServiceDescriptorGenerator {
     ServerUrlContextService serverUrlContextService = null;
 
     for (Class<?> clazz : classes) {
-      String[] packagePath = clazz.getPackage().getName().split("\\.");
+      String[] packagePath = sanitizeAll(clazz.getPackage().getName().split("\\."));
       if (serverUrlContextService == null) {
         serverUrlContextService = new ServerUrlContextService(packagePath, contextUrl, contextToken);
       }
