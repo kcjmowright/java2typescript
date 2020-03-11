@@ -2,6 +2,8 @@ package java2typescript.jackson.module.grammar;
 
 import static java.util.stream.Collectors.toMap;
 
+import static java2typescript.jackson.module.grammar.base.JavascriptReservedWords.sanitizeAll;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
@@ -9,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,7 +32,15 @@ public class Module extends AbstractNamedType {
   private boolean export = true;
 
   public Module(String name) {
-    super(name == null ? new String[]{} : name.split("\\."), name);
+    super(nameToPackagePath(name), cleanseName(name));
+  }
+
+  private static String[] nameToPackagePath(String name) {
+    return (name == null) ? new String[]{} : name.split("\\.");
+  }
+
+  private static String cleanseName(String name) {
+    return String.join(".", sanitizeAll(nameToPackagePath(name)));
   }
 
   public Module() {

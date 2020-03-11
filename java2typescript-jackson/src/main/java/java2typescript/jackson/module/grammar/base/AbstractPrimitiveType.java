@@ -1,5 +1,7 @@
 package java2typescript.jackson.module.grammar.base;
 
+import static java2typescript.jackson.module.grammar.base.JavascriptReservedWords.sanitize;
+
 import java.io.IOException;
 import java.io.Writer;
 
@@ -8,7 +10,7 @@ abstract public class AbstractPrimitiveType extends AbstractType {
   private String token;
 
   public AbstractPrimitiveType(String token) {
-    this.token = token;
+    this.token = sanitize(token);
   }
 
   @Override

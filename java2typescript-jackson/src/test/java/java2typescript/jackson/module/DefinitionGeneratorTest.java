@@ -67,7 +67,7 @@ public class DefinitionGeneratorTest {
     public Optional<Integer> _optionalInteger;
     public String test;
 
-    public String aMethod(boolean recParam, String param2) {
+    public String aMethod(boolean recParam, String in) {
       return "toto";
     }
 

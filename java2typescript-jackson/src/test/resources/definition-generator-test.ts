@@ -57,11 +57,11 @@ export {
   lang,
   util
 };
-import * as function from './function';
+import * as _function from './_function';
 import * as stream from './stream';
 
 export {
-  function,
+  _function,
   stream
 };
 import { IComparator } from './i-comparator';
@@ -92,10 +92,10 @@ export {
 
 
 java.util.IComparator
-import { IFunction } from './function/i-function';
-import { IToDoubleFunction } from './function/i-to-double-function';
-import { IToIntFunction } from './function/i-to-int-function';
-import { IToLongFunction } from './function/i-to-long-function';
+import { IFunction } from './_function/i-function';
+import { IToDoubleFunction } from './_function/i-to-double-function';
+import { IToIntFunction } from './_function/i-to-int-function';
+import { IToLongFunction } from './_function/i-to-long-function';
 
 export interface IComparator<T> {
   compare(param0?: any, param1?: any): number;
@@ -147,8 +147,8 @@ export interface ILongSummaryStatistics {
 
 java.util.IOfDouble
 import { IComparator } from './i-comparator';
-import { IConsumer } from './function/i-consumer';
-import { IDoubleConsumer } from './function/i-double-consumer';
+import { IConsumer } from './_function/i-consumer';
+import { IDoubleConsumer } from './_function/i-double-consumer';
 
 export interface IOfDouble {
   comparator?: IComparator<any>;
@@ -164,8 +164,8 @@ export interface IOfDouble {
 
 java.util.IOfInt
 import { IComparator } from './i-comparator';
-import { IConsumer } from './function/i-consumer';
-import { IIntConsumer } from './function/i-int-consumer';
+import { IConsumer } from './_function/i-consumer';
+import { IIntConsumer } from './_function/i-int-consumer';
 
 export interface IOfInt {
   comparator?: IComparator<any>;
@@ -181,8 +181,8 @@ export interface IOfInt {
 
 java.util.IOfLong
 import { IComparator } from './i-comparator';
-import { IConsumer } from './function/i-consumer';
-import { ILongConsumer } from './function/i-long-consumer';
+import { IConsumer } from './_function/i-consumer';
+import { ILongConsumer } from './_function/i-long-consumer';
 
 export interface IOfLong {
   comparator?: IComparator<any>;
@@ -197,12 +197,12 @@ export interface IOfLong {
 }
 
 java.util.IOptional
-import { IConsumer } from './function/i-consumer';
-import { IFunction } from './function/i-function';
-import { IPredicate } from './function/i-predicate';
+import { IConsumer } from './_function/i-consumer';
+import { IFunction } from './_function/i-function';
+import { IPredicate } from './_function/i-predicate';
 import { IRunnable } from '../lang/i-runnable';
 import { IStream } from './stream/i-stream';
-import { ISupplier } from './function/i-supplier';
+import { ISupplier } from './_function/i-supplier';
 
 export interface IOptional<T> {
   empty?: boolean;
@@ -222,11 +222,11 @@ export interface IOptional<T> {
 }
 
 java.util.IOptionalDouble
-import { IDoubleConsumer } from './function/i-double-consumer';
+import { IDoubleConsumer } from './_function/i-double-consumer';
 import { IDoubleStream } from './stream/i-double-stream';
-import { IDoubleSupplier } from './function/i-double-supplier';
+import { IDoubleSupplier } from './_function/i-double-supplier';
 import { IRunnable } from '../lang/i-runnable';
-import { ISupplier } from './function/i-supplier';
+import { ISupplier } from './_function/i-supplier';
 
 export interface IOptionalDouble {
   asDouble?: number;
@@ -242,11 +242,11 @@ export interface IOptionalDouble {
 }
 
 java.util.IOptionalInt
-import { IIntConsumer } from './function/i-int-consumer';
+import { IIntConsumer } from './_function/i-int-consumer';
 import { IIntStream } from './stream/i-int-stream';
-import { IIntSupplier } from './function/i-int-supplier';
+import { IIntSupplier } from './_function/i-int-supplier';
 import { IRunnable } from '../lang/i-runnable';
-import { ISupplier } from './function/i-supplier';
+import { ISupplier } from './_function/i-supplier';
 
 export interface IOptionalInt {
   asInt?: number;
@@ -262,11 +262,11 @@ export interface IOptionalInt {
 }
 
 java.util.IOptionalLong
-import { ILongConsumer } from './function/i-long-consumer';
+import { ILongConsumer } from './_function/i-long-consumer';
 import { ILongStream } from './stream/i-long-stream';
-import { ILongSupplier } from './function/i-long-supplier';
+import { ILongSupplier } from './_function/i-long-supplier';
 import { IRunnable } from '../lang/i-runnable';
-import { ISupplier } from './function/i-supplier';
+import { ISupplier } from './_function/i-supplier';
 
 export interface IOptionalLong {
   asLong?: number;
@@ -359,14 +359,14 @@ export {
 };
 
 
-java.util.function.IBiConsumer
+java.util._function.IBiConsumer
 
 export interface IBiConsumer<T, U> {
   accept(param0?: any, param1?: any): void;
   andThen(param0?: IBiConsumer<any, any>): IBiConsumer<any, any>;
 }
 
-java.util.function.IBiFunction
+java.util._function.IBiFunction
 import { IFunction } from './i-function';
 
 export interface IBiFunction<T, U, R> {
@@ -374,35 +374,35 @@ export interface IBiFunction<T, U, R> {
   apply(param0?: any, param1?: any): any;
 }
 
-java.util.function.IBinaryOperator
+java.util._function.IBinaryOperator
 export interface IBinaryOperator<T> {
 }
 
-java.util.function.IConsumer
+java.util._function.IConsumer
 
 export interface IConsumer<T> {
   accept(param0?: any): void;
   andThen(param0?: IConsumer<any>): IConsumer<any>;
 }
 
-java.util.function.IDoubleBinaryOperator
+java.util._function.IDoubleBinaryOperator
 export interface IDoubleBinaryOperator {
   applyAsDouble(param0?: number, param1?: number): number;
 }
 
-java.util.function.IDoubleConsumer
+java.util._function.IDoubleConsumer
 
 export interface IDoubleConsumer {
   accept(param0?: number): void;
   andThen(param0?: IDoubleConsumer): IDoubleConsumer;
 }
 
-java.util.function.IDoubleFunction
+java.util._function.IDoubleFunction
 export interface IDoubleFunction<R> {
   apply(param0?: number): any;
 }
 
-java.util.function.IDoublePredicate
+java.util._function.IDoublePredicate
 
 export interface IDoublePredicate {
   and(param0?: IDoublePredicate): IDoublePredicate;
@@ -411,22 +411,22 @@ export interface IDoublePredicate {
   test(param0?: number): boolean;
 }
 
-java.util.function.IDoubleSupplier
+java.util._function.IDoubleSupplier
 export interface IDoubleSupplier {
   asDouble?: number;
 }
 
-java.util.function.IDoubleToIntFunction
+java.util._function.IDoubleToIntFunction
 export interface IDoubleToIntFunction {
   applyAsInt(param0?: number): number;
 }
 
-java.util.function.IDoubleToLongFunction
+java.util._function.IDoubleToLongFunction
 export interface IDoubleToLongFunction {
   applyAsLong(param0?: number): number;
 }
 
-java.util.function.IDoubleUnaryOperator
+java.util._function.IDoubleUnaryOperator
 
 export interface IDoubleUnaryOperator {
   andThen(param0?: IDoubleUnaryOperator): IDoubleUnaryOperator;
@@ -434,7 +434,7 @@ export interface IDoubleUnaryOperator {
   compose(param0?: IDoubleUnaryOperator): IDoubleUnaryOperator;
 }
 
-java.util.function.IFunction
+java.util._function.IFunction
 
 export interface IFunction<T, R> {
   andThen(param0?: IFunction<any, any>): IFunction<any, any>;
@@ -442,24 +442,24 @@ export interface IFunction<T, R> {
   compose(param0?: IFunction<any, any>): IFunction<any, any>;
 }
 
-java.util.function.IIntBinaryOperator
+java.util._function.IIntBinaryOperator
 export interface IIntBinaryOperator {
   applyAsInt(param0?: number, param1?: number): number;
 }
 
-java.util.function.IIntConsumer
+java.util._function.IIntConsumer
 
 export interface IIntConsumer {
   accept(param0?: number): void;
   andThen(param0?: IIntConsumer): IIntConsumer;
 }
 
-java.util.function.IIntFunction
+java.util._function.IIntFunction
 export interface IIntFunction<R> {
   apply(param0?: number): any;
 }
 
-java.util.function.IIntPredicate
+java.util._function.IIntPredicate
 
 export interface IIntPredicate {
   and(param0?: IIntPredicate): IIntPredicate;
@@ -468,22 +468,22 @@ export interface IIntPredicate {
   test(param0?: number): boolean;
 }
 
-java.util.function.IIntSupplier
+java.util._function.IIntSupplier
 export interface IIntSupplier {
   asInt?: number;
 }
 
-java.util.function.IIntToDoubleFunction
+java.util._function.IIntToDoubleFunction
 export interface IIntToDoubleFunction {
   applyAsDouble(param0?: number): number;
 }
 
-java.util.function.IIntToLongFunction
+java.util._function.IIntToLongFunction
 export interface IIntToLongFunction {
   applyAsLong(param0?: number): number;
 }
 
-java.util.function.IIntUnaryOperator
+java.util._function.IIntUnaryOperator
 
 export interface IIntUnaryOperator {
   andThen(param0?: IIntUnaryOperator): IIntUnaryOperator;
@@ -491,24 +491,24 @@ export interface IIntUnaryOperator {
   compose(param0?: IIntUnaryOperator): IIntUnaryOperator;
 }
 
-java.util.function.ILongBinaryOperator
+java.util._function.ILongBinaryOperator
 export interface ILongBinaryOperator {
   applyAsLong(param0?: number, param1?: number): number;
 }
 
-java.util.function.ILongConsumer
+java.util._function.ILongConsumer
 
 export interface ILongConsumer {
   accept(param0?: number): void;
   andThen(param0?: ILongConsumer): ILongConsumer;
 }
 
-java.util.function.ILongFunction
+java.util._function.ILongFunction
 export interface ILongFunction<R> {
   apply(param0?: number): any;
 }
 
-java.util.function.ILongPredicate
+java.util._function.ILongPredicate
 
 export interface ILongPredicate {
   and(param0?: ILongPredicate): ILongPredicate;
@@ -517,22 +517,22 @@ export interface ILongPredicate {
   test(param0?: number): boolean;
 }
 
-java.util.function.ILongSupplier
+java.util._function.ILongSupplier
 export interface ILongSupplier {
   asLong?: number;
 }
 
-java.util.function.ILongToDoubleFunction
+java.util._function.ILongToDoubleFunction
 export interface ILongToDoubleFunction {
   applyAsDouble(param0?: number): number;
 }
 
-java.util.function.ILongToIntFunction
+java.util._function.ILongToIntFunction
 export interface ILongToIntFunction {
   applyAsInt(param0?: number): number;
 }
 
-java.util.function.ILongUnaryOperator
+java.util._function.ILongUnaryOperator
 
 export interface ILongUnaryOperator {
   andThen(param0?: ILongUnaryOperator): ILongUnaryOperator;
@@ -540,22 +540,22 @@ export interface ILongUnaryOperator {
   compose(param0?: ILongUnaryOperator): ILongUnaryOperator;
 }
 
-java.util.function.IObjDoubleConsumer
+java.util._function.IObjDoubleConsumer
 export interface IObjDoubleConsumer<T> {
   accept(param0?: any, param1?: number): void;
 }
 
-java.util.function.IObjIntConsumer
+java.util._function.IObjIntConsumer
 export interface IObjIntConsumer<T> {
   accept(param0?: any, param1?: number): void;
 }
 
-java.util.function.IObjLongConsumer
+java.util._function.IObjLongConsumer
 export interface IObjLongConsumer<T> {
   accept(param0?: any, param1?: number): void;
 }
 
-java.util.function.IPredicate
+java.util._function.IPredicate
 
 export interface IPredicate<T> {
   and(param0?: IPredicate<any>): IPredicate<any>;
@@ -564,22 +564,22 @@ export interface IPredicate<T> {
   test(param0?: any): boolean;
 }
 
-java.util.function.ISupplier
+java.util._function.ISupplier
 export interface ISupplier<T> {
   get(): any;
 }
 
-java.util.function.IToDoubleFunction
+java.util._function.IToDoubleFunction
 export interface IToDoubleFunction<T> {
   applyAsDouble(param0?: any): number;
 }
 
-java.util.function.IToIntFunction
+java.util._function.IToIntFunction
 export interface IToIntFunction<T> {
   applyAsInt(param0?: any): number;
 }
 
-java.util.function.IToLongFunction
+java.util._function.IToLongFunction
 export interface IToLongFunction<T> {
   applyAsLong(param0?: any): number;
 }
@@ -597,22 +597,22 @@ export {
 
 
 java.util.stream.IDoubleStream
-import { IBiConsumer } from '../function/i-bi-consumer';
-import { IDoubleBinaryOperator } from '../function/i-double-binary-operator';
-import { IDoubleConsumer } from '../function/i-double-consumer';
-import { IDoubleFunction } from '../function/i-double-function';
-import { IDoublePredicate } from '../function/i-double-predicate';
+import { IBiConsumer } from '../_function/i-bi-consumer';
+import { IDoubleBinaryOperator } from '../_function/i-double-binary-operator';
+import { IDoubleConsumer } from '../_function/i-double-consumer';
+import { IDoubleFunction } from '../_function/i-double-function';
+import { IDoublePredicate } from '../_function/i-double-predicate';
 import { IDoubleSummaryStatistics } from '../i-double-summary-statistics';
-import { IDoubleToIntFunction } from '../function/i-double-to-int-function';
-import { IDoubleToLongFunction } from '../function/i-double-to-long-function';
-import { IDoubleUnaryOperator } from '../function/i-double-unary-operator';
+import { IDoubleToIntFunction } from '../_function/i-double-to-int-function';
+import { IDoubleToLongFunction } from '../_function/i-double-to-long-function';
+import { IDoubleUnaryOperator } from '../_function/i-double-unary-operator';
 import { IIntStream } from './i-int-stream';
 import { ILongStream } from './i-long-stream';
-import { IObjDoubleConsumer } from '../function/i-obj-double-consumer';
+import { IObjDoubleConsumer } from '../_function/i-obj-double-consumer';
 import { IOfDouble } from '../i-of-double';
 import { IOptionalDouble } from '../i-optional-double';
 import { IStream } from './i-stream';
-import { ISupplier } from '../function/i-supplier';
+import { ISupplier } from '../_function/i-supplier';
 
 export interface IDoubleStream {
   _parallel?: boolean;
@@ -654,23 +654,23 @@ export interface IDoubleStream {
 }
 
 java.util.stream.IIntStream
-import { IBiConsumer } from '../function/i-bi-consumer';
+import { IBiConsumer } from '../_function/i-bi-consumer';
 import { IDoubleStream } from './i-double-stream';
-import { IIntBinaryOperator } from '../function/i-int-binary-operator';
-import { IIntConsumer } from '../function/i-int-consumer';
-import { IIntFunction } from '../function/i-int-function';
-import { IIntPredicate } from '../function/i-int-predicate';
+import { IIntBinaryOperator } from '../_function/i-int-binary-operator';
+import { IIntConsumer } from '../_function/i-int-consumer';
+import { IIntFunction } from '../_function/i-int-function';
+import { IIntPredicate } from '../_function/i-int-predicate';
 import { IIntSummaryStatistics } from '../i-int-summary-statistics';
-import { IIntToDoubleFunction } from '../function/i-int-to-double-function';
-import { IIntToLongFunction } from '../function/i-int-to-long-function';
-import { IIntUnaryOperator } from '../function/i-int-unary-operator';
+import { IIntToDoubleFunction } from '../_function/i-int-to-double-function';
+import { IIntToLongFunction } from '../_function/i-int-to-long-function';
+import { IIntUnaryOperator } from '../_function/i-int-unary-operator';
 import { ILongStream } from './i-long-stream';
-import { IObjIntConsumer } from '../function/i-obj-int-consumer';
+import { IObjIntConsumer } from '../_function/i-obj-int-consumer';
 import { IOfInt } from '../i-of-int';
 import { IOptionalDouble } from '../i-optional-double';
 import { IOptionalInt } from '../i-optional-int';
 import { IStream } from './i-stream';
-import { ISupplier } from '../function/i-supplier';
+import { ISupplier } from '../_function/i-supplier';
 
 export interface IIntStream {
   _parallel?: boolean;
@@ -714,23 +714,23 @@ export interface IIntStream {
 }
 
 java.util.stream.ILongStream
-import { IBiConsumer } from '../function/i-bi-consumer';
+import { IBiConsumer } from '../_function/i-bi-consumer';
 import { IDoubleStream } from './i-double-stream';
 import { IIntStream } from './i-int-stream';
-import { ILongBinaryOperator } from '../function/i-long-binary-operator';
-import { ILongConsumer } from '../function/i-long-consumer';
-import { ILongFunction } from '../function/i-long-function';
-import { ILongPredicate } from '../function/i-long-predicate';
+import { ILongBinaryOperator } from '../_function/i-long-binary-operator';
+import { ILongConsumer } from '../_function/i-long-consumer';
+import { ILongFunction } from '../_function/i-long-function';
+import { ILongPredicate } from '../_function/i-long-predicate';
 import { ILongSummaryStatistics } from '../i-long-summary-statistics';
-import { ILongToDoubleFunction } from '../function/i-long-to-double-function';
-import { ILongToIntFunction } from '../function/i-long-to-int-function';
-import { ILongUnaryOperator } from '../function/i-long-unary-operator';
-import { IObjLongConsumer } from '../function/i-obj-long-consumer';
+import { ILongToDoubleFunction } from '../_function/i-long-to-double-function';
+import { ILongToIntFunction } from '../_function/i-long-to-int-function';
+import { ILongUnaryOperator } from '../_function/i-long-unary-operator';
+import { IObjLongConsumer } from '../_function/i-obj-long-consumer';
 import { IOfLong } from '../i-of-long';
 import { IOptionalDouble } from '../i-optional-double';
 import { IOptionalLong } from '../i-optional-long';
 import { IStream } from './i-stream';
-import { ISupplier } from '../function/i-supplier';
+import { ISupplier } from '../_function/i-supplier';
 
 export interface ILongStream {
   _parallel?: boolean;
@@ -773,22 +773,22 @@ export interface ILongStream {
 }
 
 java.util.stream.IStream
-import { IBiConsumer } from '../function/i-bi-consumer';
-import { IBiFunction } from '../function/i-bi-function';
-import { IBinaryOperator } from '../function/i-binary-operator';
+import { IBiConsumer } from '../_function/i-bi-consumer';
+import { IBiFunction } from '../_function/i-bi-function';
+import { IBinaryOperator } from '../_function/i-binary-operator';
 import { IComparator } from '../i-comparator';
-import { IConsumer } from '../function/i-consumer';
+import { IConsumer } from '../_function/i-consumer';
 import { IDoubleStream } from './i-double-stream';
-import { IFunction } from '../function/i-function';
-import { IIntFunction } from '../function/i-int-function';
+import { IFunction } from '../_function/i-function';
+import { IIntFunction } from '../_function/i-int-function';
 import { IIntStream } from './i-int-stream';
 import { ILongStream } from './i-long-stream';
 import { IOptional } from '../i-optional';
-import { IPredicate } from '../function/i-predicate';
-import { ISupplier } from '../function/i-supplier';
-import { IToDoubleFunction } from '../function/i-to-double-function';
-import { IToIntFunction } from '../function/i-to-int-function';
-import { IToLongFunction } from '../function/i-to-long-function';
+import { IPredicate } from '../_function/i-predicate';
+import { ISupplier } from '../_function/i-supplier';
+import { IToDoubleFunction } from '../_function/i-to-double-function';
+import { IToIntFunction } from '../_function/i-to-int-function';
+import { IToLongFunction } from '../_function/i-to-long-function';
 
 export interface IStream<T> {
   parallel?: boolean;

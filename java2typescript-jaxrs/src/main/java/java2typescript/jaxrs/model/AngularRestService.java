@@ -1,5 +1,7 @@
 package java2typescript.jaxrs.model;
 
+import static java2typescript.jackson.module.grammar.base.JavascriptReservedWords.sanitizePath;
+
 import java2typescript.jackson.module.PathResolver;
 import java2typescript.jackson.module.grammar.ClassType;
 import java2typescript.jackson.module.grammar.FunctionType;
@@ -27,7 +29,7 @@ public class AngularRestService extends BaseModel {
   public AngularRestService(String[] packagePath, String name, String path, String prefix, String contextToken, ServerUrlContextService serverUrlContextService) {
     super(packagePath, name);
     this.contextToken = contextToken;
-    this.path = path;
+    this.path = sanitizePath(path);
     this.prefix = prefix;
     this.serverUrlContextService = serverUrlContextService;
   }

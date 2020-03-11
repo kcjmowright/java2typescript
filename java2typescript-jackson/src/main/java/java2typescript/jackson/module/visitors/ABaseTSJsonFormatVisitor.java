@@ -86,7 +86,7 @@ public abstract class ABaseTSJsonFormatVisitor<T extends AbstractType> implement
     moduleCache.put(moduleName, newModule);
     String parentName = getParentName(moduleName);
     Module parent = getModule(parentName);
-    parent.getModules().put(moduleName, newModule);
+    parent.getModules().put(newModule.getName(), newModule);
     return newModule;
   }
 

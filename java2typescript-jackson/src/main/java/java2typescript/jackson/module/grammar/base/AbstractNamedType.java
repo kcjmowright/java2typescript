@@ -1,5 +1,8 @@
 package java2typescript.jackson.module.grammar.base;
 
+import static java2typescript.jackson.module.grammar.base.JavascriptReservedWords.sanitize;
+import static java2typescript.jackson.module.grammar.base.JavascriptReservedWords.sanitizeAll;
+
 import java2typescript.jackson.module.Dasherize;
 
 import java.io.File;
@@ -26,8 +29,8 @@ abstract public class AbstractNamedType extends AbstractType {
   protected Set<AbstractNamedType> innerTypes = new HashSet<>();
 
   public AbstractNamedType(String[] packagePath, String className) {
-    this.name = className;
-    this.packagePath = packagePath;
+    this.name = sanitize(className);
+    this.packagePath = sanitizeAll(packagePath);
   }
 
   @Override

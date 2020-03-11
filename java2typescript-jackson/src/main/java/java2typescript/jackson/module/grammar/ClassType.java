@@ -2,6 +2,8 @@ package java2typescript.jackson.module.grammar;
 
 import static java.lang.String.format;
 
+import static java2typescript.jackson.module.grammar.base.JavascriptReservedWords.sanitize;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;

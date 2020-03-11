@@ -19,8 +19,8 @@ public class ServerUrlContextService extends AbstractNamedType {
   public void write(Writer writer) throws IOException {
     writer.write("import { InjectionToken } from '@angular/core';\n\n");
     writer.write("export const " + contextToken + " = new InjectionToken<String>('URL Context token', {\n");
-    writer.write("    providedIn: 'root',\n");
-    writer.write("    factory: () => '" + contextUrl + "'\n");
+    writer.write("  providedIn: 'root',\n");
+    writer.write("  factory: () => '" + contextUrl + "'\n");
     writer.write("});\n\n");
   }
 }

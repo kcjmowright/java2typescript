@@ -5,13 +5,14 @@ import static java.lang.reflect.Modifier.isStatic;
 
 import static com.fasterxml.jackson.databind.PropertyName.NO_NAME;
 
+import static java2typescript.jackson.module.grammar.base.JavascriptReservedWords.sanitize;
+import static java2typescript.jackson.module.grammar.base.JavascriptReservedWords.sanitizeAll;
 import static java2typescript.jackson.module.visitors.TSJsonFormatVisitorWrapper.getTSTypeForHandler;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.Transient;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -51,7 +52,7 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
 
   public TSJsonObjectFormatVisitor(ABaseTSJsonFormatVisitor<?> parentHolder, String className, Class clazz) {
     super(parentHolder);
-    String[] packagePath = clazz.getPackage().getName().split("\\.");
+    String[] packagePath = sanitizeAll(clazz.getPackage().getName().split("\\."));
 
     Arrays.stream(clazz.getTypeParameters())
       .forEach(typeVariable -> {
@@ -63,7 +64,7 @@ public class TSJsonObjectFormatVisitor extends ABaseTSJsonFormatVisitor<ClassTyp
   }
 
   private void addField(String name, AbstractType fieldType) {
-    type.getFields().put(name, fieldType);
+    type.getFields().put(sanitize(name), fieldType);
   }
 
   private boolean isIgnoreableMethod(Method method, BeanInfo beanInfo) {

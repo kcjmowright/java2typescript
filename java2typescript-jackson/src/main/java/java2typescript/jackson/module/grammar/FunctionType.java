@@ -18,13 +18,14 @@ package java2typescript.jackson.module.grammar;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import java2typescript.jackson.module.grammar.base.AbstractType;
 
 public class FunctionType extends AbstractType {
 
-  private LinkedHashMap<String, AbstractType> parameters = new LinkedHashMap<String, AbstractType>();
+  private Map<String, AbstractType> parameters = new LinkedHashMap<>();
 
   private AbstractType resultType;
 
@@ -53,7 +54,7 @@ public class FunctionType extends AbstractType {
     resultType.write(writer);
   }
 
-  public LinkedHashMap<String, AbstractType> getParameters() {
+  public Map<String, AbstractType> getParameters() {
     return parameters;
   }
 
